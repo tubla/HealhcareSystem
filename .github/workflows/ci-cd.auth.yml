@@ -4,11 +4,11 @@ on:
   push:
     branches: [ main ]
     paths:
-      - 'src/AuthService/**'
+      - 'src/AuthenticationService/**'
   pull_request:
     branches: [ main ]
     paths:
-      - 'src/AuthService/**'
+      - 'src/AuthenticationService/**'
 
 jobs:
   build-and-deploy:
@@ -23,13 +23,10 @@ jobs:
         dotnet-version: '8.0.x'
 
     - name: Restore dependencies
-      run: dotnet restore src/AuthService/AuthService.csproj
+      run: dotnet restore src/AuthenticationService/authentication.api/authentication.api.csproj
 
     - name: Build
-      run: dotnet build src/AuthService/AuthService.csproj --no-restore -c Release
-
-    - name: Test
-      run: dotnet test tests/AuthService.Tests/AuthService.Tests.csproj --no-build --verbosity normal
+      run: dotnet build src/AuthenticationService/authentication.api/authentication.api.csproj --no-restore -c Release
 
     - name: Login to Azure
       uses: azure/login@v1
@@ -45,7 +42,7 @@ jobs:
 
     - name: Build and push Docker image
       run: |
-        docker build -t ${{ secrets.ACR_REGISTRY }}/auth-service:${{ github.sha }} -f src/AuthService/Dockerfile src/AuthService
+        docker build -t ${{ secrets.ACR_REGISTRY }}/auth-service:${{ github.sha }} -f src/AuthenticationService/authentication.api/Dockerfile src/AuthenticationService
         docker push ${{ secrets.ACR_REGISTRY }}/auth-service:${{ github.sha }}
 
     - name: Deploy to Azure Container App

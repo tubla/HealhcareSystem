@@ -23,13 +23,13 @@ jobs:
         dotnet-version: '8.0.x'
 
     - name: Restore dependencies
-      run: dotnet restore src/NotificationService/NotificationService.csproj
+      run: dotnet restore src/NotificationService/notificationservice.function/NotificationService.csproj
 
     - name: Build
-      run: dotnet build src/NotificationService/NotificationService.csproj --no-restore -c Release
+      run: dotnet build src/NotificationService/notificationservice.function/NotificationService.csproj --no-restore -c Release
 
     - name: Publish Function App
-      run: dotnet publish src/NotificationService/NotificationService.csproj -c Release -o ./publish
+      run: dotnet publish src/NotificationService/notificationservice.function/NotificationService.csproj -c Release -o ./publish
 
     - name: Login to Azure
       uses: azure/login@v1
