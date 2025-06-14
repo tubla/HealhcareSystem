@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>44239d21-e1b2-44b2-a30a-a11b1d5f418a</UserSecretsId>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <DockerfileContext>..\..\..</DockerfileContext>
+  </PropertyGroup>
+
+  <ItemGroup>	  
+	  <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.22.0" />
+	  <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.8" />
+	  <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.8" />
+	  <PackageReference Include="Microsoft.Extensions.Azure" Version="1.7.3" />
+	  <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="9.0.6" />
+	  <PackageReference Include="Microsoft.Extensions.Configuration.AzureAppConfiguration" Version="7.3.0" />
+	  <PackageReference Include="Microsoft.AspNetCore.Mvc.Versioning" Version="5.1.0" />
+	  <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.21.0" />
+	  <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\appointment.services\appointment.services.csproj" />
+  </ItemGroup>
+
+</Project>

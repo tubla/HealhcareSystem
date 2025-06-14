@@ -1,0 +1,16 @@
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: pubsub
+spec:
+  type: pubsub.eventhubs
+  version: v1
+  metadata:
+  - name: namespaceName
+    value: "healthcare-eventhub"
+  - name: consumerGroup
+    value: "notification-service"
+  - name: azureTenantId
+    value: "<Your-Tenant-ID>"
+  - name: azureClientId
+    value: "<healthcare-identity-Client-ID>"

@@ -1,0 +1,88 @@
+name: Appointment Service CI/CD
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'src/AppointmentService/**'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'src/AppointmentService/**'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Restore dependencies
+      run: dotnet restore src/AppointmentService/AppointmentService.csproj
+
+    - name: Build
+      run: dotnet build src/AppointmentService/AppointmentService.csproj --no-restore -c Release
+
+    - name: Test
+      run: dotnet test tests/AppointmentService.Tests/AppointmentService.Tests.csproj --no-build --verbosity normal
+
+    - name: Login to Azure
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Login to Azure Container Registry
+      uses: azure/docker-login@v1
+      with:
+        login-server: ${{ secrets.ACR_REGISTRY }}
+        username: ${{ secrets.ACR_USERNAME }}
+        password: ${{ secrets.ACR_PASSWORD }}
+
+    - name: Build and push Docker image
+      run: |
+        docker build -t ${{ secrets.ACR_REGISTRY }}/appointment-service:${{ github.sha }} -f src/AppointmentService/Dockerfile src/AppointmentService
+        docker push ${{ secrets.ACR_REGISTRY }}/appointment-service:${{ github.sha }}
+
+    - name: Deploy to Azure Container App
+      uses: azure/CLI@v1
+      with:
+        inlineScript: |
+          az containerapp create \
+            --name appointment-service \
+            --resource-group healthcare-rg \
+            --environment healthcare-ca-env \
+            --image ${{ secrets.ACR_REGISTRY }}/appointment-service:${{ github.sha }} \
+            --target-port 8080 \
+            --ingress external \
+            --registry-server ${{ secrets.ACR_REGISTRY }} \
+            --registry-username ${{ secrets.ACR_USERNAME }} \
+            --registry-password ${{ secrets.ACR_PASSWORD }} \
+            --user-assigned healthcare-identity \
+            --cpu 0.5 \
+            --memory 1.0Gi \
+            --min-replicas 1 \
+            --max-replicas 3 \
+            --enable-dapr \
+            --dapr-app-id appointment-service \
+            --dapr-app-port 8080 \
+            --dapr-components ./dapr/components \
+            --env-vars \
+              "ASPNETCORE_ENVIRONMENT=Development" \
+              "KeyVault__VaultUri=https://healthcare-vault.vault.azure.net/" \
+              "ConnectionStrings__SqlConnection=secret://healthcare-vault/SqlConnection" \
+              "AppConfiguration__ConnectionString=secret://healthcare-vault/AppConfigConnection" \
+              "Jwt__Key=secret://healthcare-vault/JwtKey" \
+              "Jwt__Issuer=HealthcareAuthService" \
+              "Jwt__Audience=HealthcareApi" \
+              "ApplicationInsights__ConnectionString=secret://healthcare-vault/AppInsightsConnection" \
+              "Dapr__PubSubName=pubsub"
+
+          az containerapp update \
+            --name appointment-service \
+            --resource-group healthcare-rg \
+            --image ${{ secrets.ACR_REGISTRY }}/appointment-service:${{ github.sha }}
