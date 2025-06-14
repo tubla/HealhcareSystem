@@ -2,7 +2,7 @@ using appointment.api.V1.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// Add services to the container..
 builder.Services.AddServiceCollection(builder.Configuration);
 var app = builder.Build();
 app.UseApplicationMiddlewares();
