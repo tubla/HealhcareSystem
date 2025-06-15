@@ -3,14 +3,15 @@ kind: Component
 metadata:
   name: pubsub
 spec:
-  type: pubsub.eventhubs
+  type: pubsub.azure.eventhubs
   version: v1
   metadata:
   - name: namespaceName
     value: "healthcare-eventhub"
   - name: consumerGroup
     value: "$Default"
-  - name: azureTenantId
-    value: "2c97eabd-c60d-4370-b7b6-7a4f384c6596"
-  - name: azureClientId
-    value: "4c385467-9229-460d-b799-50a1de32a908"
+  - name: connectionString
+    secretRef: eventhub-connection
+secrets:
+- name: eventhub-connection
+  key: EventHubConnection

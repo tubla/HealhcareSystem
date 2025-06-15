@@ -65,15 +65,15 @@ jobs:
       uses: azure/CLI@v2
       with:
         inlineScript: |
-          if [ ! -f ./dapr/components/pubsub.yaml ]; then
-            echo "ERROR: Dapr component file ./dapr/components/pubsub.yaml does not exist"
+          if [ ! -f ./dapr/components/pubsub.yml ]; then
+            echo "ERROR: Dapr component file ./dapr/components/pubsub.yml does not exist"
             exit 1
           fi
           az containerapp env dapr-component set \
             --name healthcare-ca-env \
             --dapr-component-name pubsub \
             --resource-group healthcare-rg \
-            --yaml ./dapr/components/pubsub.yaml
+            --yaml ./dapr/components/pubsub.yml
 
     - name: Deploy to Azure Container App
       uses: azure/CLI@v2
