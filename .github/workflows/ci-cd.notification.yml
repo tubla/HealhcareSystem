@@ -9,7 +9,6 @@ on:
       - '.github/workflows/ci-cd.notification.yml'
       - '.github/workflows/ci-cd.auth.yml'
       - '.github/workflows/ci-cd.appointment.yml'
-      - 'dapr/components/pubsub.yaml'
   pull_request:
     branches: [ main ]
     paths:
@@ -17,7 +16,6 @@ on:
       - '.github/workflows/ci-cd.notification.yml'
       - '.github/workflows/ci-cd.auth.yml'
       - '.github/workflows/ci-cd.appointment.yml'
-      - 'dapr/components/pubsub.yaml'
 
 jobs:
   build-and-deploy:
@@ -46,16 +44,6 @@ jobs:
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-    - name: Apply Dapr Components
-      uses: azure/CLI@v2
-      with:
-        inlineScript: |
-          az functionapp config dapr component set \
-            --app-name healthcare-notification \
-            --dapr-component-name pubsub \
-            --resource-group healthcare-rg \
-            --yaml ./dapr/components/pubsub.yaml
-
     - name: Deploy to Azure Function App
       uses: Azure/functions-action@v1
       with:
@@ -74,5 +62,4 @@ jobs:
             --settings \
               "ASPNETCORE_ENVIRONMENT=Development" \
               "EventHubConnection=secret://healthcare-vault/EventHubConnection" \
-              "APPLICATIONINSIGHTS_CONNECTION_STRING=secret://healthcare-vault/AppInsightsConnection" \
-              "Dapr__PubSubName=pubsub"
+              "APPLICATIONINSIGHTS_CONNECTION_STRING=secret://healthcare-vault/AppInsightsConnection"

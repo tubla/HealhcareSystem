@@ -9,8 +9,8 @@ spec:
   - name: namespaceName
     value: "healthcare-eventhub"
   - name: consumerGroup
-    value: "notification-service"
+    value: "$Default"
   - name: azureTenantId
-    value: "<Your-Tenant-ID>"
+    value: "2c97eabd-c60d-4370-b7b6-7a4f384c6596"
   - name: azureClientId
-    value: "<healthcare-identity-Client-ID>"
+    value: "4c385467-9229-460d-b799-50a1de32a908"
