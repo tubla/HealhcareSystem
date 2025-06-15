@@ -53,8 +53,6 @@ jobs:
           ${{ secrets.ACR_REGISTRY }}/appointment-service:${{ github.sha }}
           ${{ secrets.ACR_REGISTRY }}/appointment-service:latest
         platforms: linux/amd64
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
 
     - name: Apply Dapr Components
       uses: azure/CLI@v2
