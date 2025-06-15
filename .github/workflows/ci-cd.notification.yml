@@ -6,10 +6,12 @@ on:
     branches: [ main ]
     paths:
       - 'src/NotificationService/**'
+      - '.github/workflows/ci-cd.notification.yml'
   pull_request:
     branches: [ main ]
     paths:
       - 'src/NotificationService/**'
+      - '.github/workflows/ci-cd.notification.yml'
 
 jobs:
   build-and-deploy:

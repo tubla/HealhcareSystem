@@ -6,10 +6,12 @@ on:
     branches: [ main ]
     paths:
       - 'src/AppointmentService/**'
+      - '.github/workflows/ci-cd.appointment.yml'
   pull_request:
     branches: [ main ]
     paths:
       - 'src/AppointmentService/**'
+      - '.github/workflows/ci-cd.appointment.yml'
 
 jobs:
   build-and-deploy:
