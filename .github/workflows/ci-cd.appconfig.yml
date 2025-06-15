@@ -28,6 +28,10 @@ jobs:
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
 
+    - name: Install jq
+      run: |
+        sudo apt-get update && sudo apt-get install -y jq
+
     - name: Validate App Configuration Existence
       run: |
         az appconfig show --name healthcare-appconfig || {
@@ -53,18 +57,18 @@ jobs:
               vault_name="${BASH_REMATCH[1]}"
               secret_name="${BASH_REMATCH[2]}"
               vault_uri="https://${vault_name}.vault.azure.net/"
-              echo "Detected KeyVault reference: $config_key (vaultUri: $vault_uri, secretName: $secret_name)"
+              secret_identifier="${vault_uri}secrets/${secret_name}"
+              echo "Detected KeyVault reference: $config_key (secretIdentifier: $secret_identifier)"
               # Check for existing KeyVault reference
               existing=$(az appconfig kv show --name healthcare-appconfig --key "$config_key" --query "{contentType: contentType, vaultId: value}" -o json 2>/dev/null || echo "{}")
               existing_content_type=$(echo "$existing" | jq -r .contentType)
               existing_vault_id=$(echo "$existing" | jq -r .vaultId)
-              expected_vault_id="${vault_uri}secrets/${secret_name}"
-              echo "Existing contentType: $existing_content_type, vaultId: $existing_vault_id, Expected vaultId: $expected_vault_id"
-              if [ "$existing_content_type" = "application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8" ] && [ "$existing_vault_id" = "$expected_vault_id" ]; then
+              echo "Existing contentType: $existing_content_type, vaultId: $existing_vault_id, Expected vaultId: $secret_identifier"
+              if [ "$existing_content_type" = "application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8" ] && [ "$existing_vault_id" = "$secret_identifier" ]; then
                 echo "Skipping duplicate KeyVault reference: $config_key"
               else
-                echo "Setting KeyVault reference: $config_key (vaultUri: $vault_uri, secretName: $secret_name)"
-                az appconfig kv set-keyvault --name healthcare-appconfig --key "$config_key" --vault-url "$vault_uri" --secret-name "$secret_name" --yes || {
+                echo "Setting KeyVault reference: $config_key (secretIdentifier: $secret_identifier)"
+                az appconfig kv set-keyvault --name healthcare-appconfig --key "$config_key" --secret-identifier "$secret_identifier" --yes || {
                   echo "ERROR: Failed to set KeyVault reference: $config_key"
                   exit 1
                 }
@@ -108,18 +112,18 @@ jobs:
               vault_name="${BASH_REMATCH[1]}"
               secret_name="${BASH_REMATCH[2]}"
               vault_uri="https://${vault_name}.vault.azure.net/"
-              echo "Detected KeyVault reference: $config_key (vaultUri: $vault_uri, secretName: $secret_name)"
+              secret_identifier="${vault_uri}secrets/${secret_name}"
+              echo "Detected KeyVault reference: $config_key (secretIdentifier: $secret_identifier)"
               # Check for existing KeyVault reference
               existing=$(az appconfig kv show --name healthcare-appconfig --key "$config_key" --query "{contentType: contentType, vaultId: value}" -o json 2>/dev/null || echo "{}")
               existing_content_type=$(echo "$existing" | jq -r .contentType)
               existing_vault_id=$(echo "$existing" | jq -r .vaultId)
-              expected_vault_id="${vault_uri}secrets/${secret_name}"
-              echo "Existing contentType: $existing_content_type, vaultId: $existing_vault_id, Expected vaultId: $expected_vault_id"
-              if [ "$existing_content_type" = "application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8" ] && [ "$existing_vault_id" = "$expected_vault_id" ]; then
+              echo "Existing contentType: $existing_content_type, vaultId: $existing_vault_id, Expected vaultId: $secret_identifier"
+              if [ "$existing_content_type" = "application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8" ] && [ "$existing_vault_id" = "$secret_identifier" ]; then
                 echo "Skipping duplicate KeyVault reference: $config_key"
               else
-                echo "Setting KeyVault reference: $config_key (vaultUri: $vault_uri, secretName: $secret_name)"
-                az appconfig kv set-keyvault --name healthcare-appconfig --key "$config_key" --vault-url "$vault_uri" --secret-name "$secret_name" --yes || {
+                echo "Setting KeyVault reference: $config_key (secretIdentifier: $secret_identifier)"
+                az appconfig kv set-keyvault --name healthcare-appconfig --key "$config_key" --secret-identifier "$secret_identifier" --yes || {
                   echo "ERROR: Failed to set KeyVault reference: $config_key"
                   exit 1
                 }
