@@ -1,7 +1,7 @@
-using System.Text.Json;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 using shared.Events;
+using System.Text.Json;
 
 namespace notificationservice.function
 {

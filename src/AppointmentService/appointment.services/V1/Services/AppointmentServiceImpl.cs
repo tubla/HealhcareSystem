@@ -3,36 +3,26 @@ using appointment.models.V1.Dtos;
 using appointment.repositories.V1.Contracts;
 using appointment.services.V1.Contracts;
 using AutoMapper;
-using Dapr.Client;
+using Azure.Messaging.EventHubs;
+using Azure.Messaging.EventHubs.Producer;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
 using shared.Events;
 using shared.Models;
+using System.Text;
+using System.Text.Json;
 
 namespace appointment.services.V1.Services;
 
-public class AppointmentServiceImpl : IAppointmentService
+public class AppointmentServiceImpl(
+    IUnitOfWork _unitOfWork,
+    IMapper _mapper,
+    EventHubProducerClient _eventHubClient,
+    IMemoryCache _cache,
+    IAuthServiceProxy _authServiceProxy,
+    ILogger<AppointmentServiceImpl> _logger
+    ) : IAppointmentService
 {
-    private readonly IUnitOfWork _unitOfWork;
-    private readonly IMapper _mapper;
-    private readonly DaprClient _daprClient;
-    private readonly IMemoryCache _cache;
-    private readonly IAuthServiceProxy _authServiceProxy;
-
-    public AppointmentServiceImpl(
-        IUnitOfWork unitOfWork,
-        IMapper mapper,
-        DaprClient daprClient,
-        IMemoryCache cache,
-        IAuthServiceProxy authServiceProxy
-    )
-    {
-        _unitOfWork = unitOfWork;
-        _mapper = mapper;
-        _daprClient = daprClient;
-        _cache = cache;
-        _authServiceProxy = authServiceProxy;
-    }
-
     public async Task<Response<AppointmentDto>> CreateAppointmentAsync(
         AppointmentDto dto,
         int userId
@@ -62,7 +52,19 @@ public class AppointmentServiceImpl : IAppointmentService
             DoctorId = appointment.DoctorID,
             AppointmentDateTime = appointment.AppointmentDateTime,
         };
-        await _daprClient.PublishEventAsync("pubsub", "appointment-scheduled", @event);
+        try
+        {
+            var eventData = new EventData(
+                Encoding.UTF8.GetBytes(JsonSerializer.Serialize(@event))
+            );
+            await _eventHubClient.SendAsync(new[] { eventData });
+            _logger.LogInformation("Published event to Event Hub: AppointmentId {AppointmentId}", @event.AppointmentId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to publish event to Event Hub for AppointmentId {AppointmentId}", @event.AppointmentId);
+            // Optionally handle error (e.g., retry or log only)
+        }
 
         // Invalidate cache
         _cache.Remove($"doctor-appointments:{dto.DoctorID}");

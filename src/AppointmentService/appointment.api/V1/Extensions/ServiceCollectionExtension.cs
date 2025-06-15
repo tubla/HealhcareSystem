@@ -1,5 +1,4 @@
-﻿using System.Text;
-using appointment.api.V1.Extensions;
+﻿using appointment.api.V1.Extensions;
 using appointment.models.V1.Context;
 using appointment.services.V1.Extensions;
 using appointment.services.V1.Mapping;
@@ -8,6 +7,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Azure;
 using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 namespace appointment.api.V1.Extensions;
 
@@ -35,7 +35,7 @@ internal static class ServiceCollectionExtension
         AddAzureAppConfigutaion(configuration);
         services.AddJwtAuthentication(configuration);
         services.AddAutoMapper(typeof(AppointmentMappingProfile));
-        services.AddAppointmentServices();
+        services.AddAppointmentServices(configuration);
     }
 
     private static void AddApiVersioning(this IServiceCollection services)

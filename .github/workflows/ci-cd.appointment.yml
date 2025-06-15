@@ -7,17 +7,11 @@ on:
     paths:
       - 'src/AppointmentService/**'
       - '.github/workflows/ci-cd.appointment.yml'
-      - '.github/workflows/ci-cd.auth.yml'
-      - '.github/workflows/ci-cd.notification.yml'
-      - 'dapr/components/pubsub.yaml'
   pull_request:
     branches: [ main ]
     paths:
       - 'src/AppointmentService/**'
       - '.github/workflows/ci-cd.appointment.yml'
-      - '.github/workflows/ci-cd.auth.yml'
-      - '.github/workflows/ci-cd.notification.yml'
-      - 'dapr/components/pubsub.yaml'
 
 jobs:
   build-and-deploy:
@@ -61,20 +55,6 @@ jobs:
           ${{ secrets.ACR_REGISTRY }}/appointment-service:latest
         platforms: linux/amd64
 
-    - name: Apply Dapr Components
-      uses: azure/CLI@v2
-      with:
-        inlineScript: |
-          if [ ! -f ./dapr/components/pubsub.yml ]; then
-            echo "ERROR: Dapr component file ./dapr/components/pubsub.yml does not exist"
-            exit 1
-          fi
-          az containerapp env dapr-component set \
-            --name healthcare-ca-env \
-            --dapr-component-name pubsub \
-            --resource-group healthcare-rg \
-            --yaml ./dapr/components/pubsub.yml
-
     - name: Deploy to Azure Container App
       uses: azure/CLI@v2
       with:
@@ -106,4 +86,4 @@ jobs:
               "Jwt__Issuer=HealthcareAuthService" \
               "Jwt__Audience=HealthcareApi" \
               "ApplicationInsights__ConnectionString=secret://healthcare-vault/AppInsightsConnection" \
-              "Dapr__PubSubName=pubsub"
+              "EventHubConnection=secret://healthcare-vault/EventHubConnection"

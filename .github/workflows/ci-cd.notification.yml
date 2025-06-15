@@ -7,15 +7,11 @@ on:
     paths:
       - 'src/NotificationService/**'
       - '.github/workflows/ci-cd.notification.yml'
-      - '.github/workflows/ci-cd.auth.yml'
-      - '.github/workflows/ci-cd.appointment.yml'
   pull_request:
     branches: [ main ]
     paths:
       - 'src/NotificationService/**'
       - '.github/workflows/ci-cd.notification.yml'
-      - '.github/workflows/ci-cd.auth.yml'
-      - '.github/workflows/ci-cd.appointment.yml'
 
 jobs:
   build-and-deploy:
