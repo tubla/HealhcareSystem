@@ -10,8 +10,8 @@ namespace appointment.api.V1.Extensions
         {
             logger.LogInformation($"Entering : AddAzureAppConfigurationWithSecrets");
             // Fetch connection string from Key Vault
-            logger.LogInformation($"KeyVault Url : {configuration["KeyVaultUrl"]!}");
-            var secretClient = new SecretClient(new Uri(configuration["KeyVaultUrl"]!), new DefaultAzureCredential());
+            logger.LogInformation($"KeyVault Url : {configuration["KeyVault:VaultUri"]!}");
+            var secretClient = new SecretClient(new Uri(configuration["KeyVault:VaultUri"]!), new DefaultAzureCredential());
             var connectionString = secretClient.GetSecret("AppConfigConnection").Value.Value;
             logger.LogInformation($"AppConfig Connection String : {connectionString}");
             if (string.IsNullOrEmpty(connectionString))

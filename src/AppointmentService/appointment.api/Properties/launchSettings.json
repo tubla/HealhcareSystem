@@ -5,8 +5,7 @@
       "launchBrowser": true,
       "launchUrl": "swagger",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development",
-        "KeyVaultUrl": "https://healthcare-vault.vault.azure.net/"
+        "ASPNETCORE_ENVIRONMENT": "Development"
       },
       "dotnetRunMessages": true,
       "applicationUrl": "http://localhost:5139"
@@ -17,7 +16,7 @@
       "launchUrl": "swagger",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "KeyVaultUrl": "https://healthcare-vault.vault.azure.net/"
+        "KeyVault:VaultUri": "https://healthcare-vault.vault.azure.net/"        
       },
       "dotnetRunMessages": true,
       "applicationUrl": "https://localhost:7211;http://localhost:5139"

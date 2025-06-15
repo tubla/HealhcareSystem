@@ -9,7 +9,7 @@ namespace authentication.api.V1.Extensions
         public static void AddAzureAppConfigurationWithSecrets(this ConfigurationManager configuration)
         {
             // Fetch connection string from Key Vault
-            var secretClient = new SecretClient(new Uri(configuration["KeyVaultUrl"]!), new DefaultAzureCredential());
+            var secretClient = new SecretClient(new Uri(configuration["KeyVault:VaultUri"]!), new DefaultAzureCredential());
             var connectionString = secretClient.GetSecret("AppConfigConnection").Value.Value;
 
             if (string.IsNullOrEmpty(connectionString))

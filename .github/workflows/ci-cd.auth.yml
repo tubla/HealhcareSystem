@@ -85,16 +85,5 @@ jobs:
             --memory 1.0Gi \
             --min-replicas 1 \
             --max-replicas 3 \
-            #--enable-dapr \
-            #--dapr-app-id auth-service \
-            #--dapr-app-port 8080 \
-            #--env-vars \
-            #  "ASPNETCORE_ENVIRONMENT=Development" \
-            #  "KeyVault__VaultUri=https://healthcare-vault.vault.azure.net/" \
-            #  "ConnectionStrings__SqlConnection=secret://healthcare-vault/SqlConnection" \
-            #  "AppConfiguration__ConnectionString=secret://healthcare-vault/AppConfigConnection" \
-            #  "Jwt__Key=secret://healthcare-vault/JwtKey" \
-            #  "Jwt__Issuer=HealthcareAuthService" \
-            #  "Jwt__Audience=HealthcareApi" \
-            #  "ApplicationInsights__ConnectionString=secret://healthcare-vault/AppInsightsConnection" \
-            #  "EventHubConnection=secret://healthcare-vault/EventHubConnection"
+            --env-vars \
+               "KeyVault__VaultUri=https://healthcare-vault.vault.azure.net/"
