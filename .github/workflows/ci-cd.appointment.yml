@@ -66,8 +66,8 @@ jobs:
       with:
         inlineScript: |
           az containerapp env dapr-component set \
+            --name healthcare-ca-env \
             --dapr-component-name pubsub \
-            --environment healthcare-ca-env \
             --resource-group healthcare-rg \
             --yaml ./dapr/components/pubsub.yaml
 
