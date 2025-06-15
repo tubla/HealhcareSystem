@@ -33,13 +33,13 @@ jobs:
         dotnet-version: '8.0.x'
 
     - name: Restore dependencies
-      run: dotnet restore src/NotificationService/notificationservice.function/NotificationService.csproj
+      run: dotnet restore src/NotificationService/notificationservice.function/notificationservice.function.csproj
 
     - name: Build
-      run: dotnet build src/NotificationService/notificationservice.function/NotificationService.csproj --no-restore -c Release
+      run: dotnet build src/NotificationService/notificationservice.function/notificationservice.function.csproj --no-restore -c Release
 
     - name: Publish Function App
-      run: dotnet publish src/NotificationService/notificationservice.function/NotificationService.csproj -c Release -o ./publish
+      run: dotnet publish src/NotificationService/notificationservice.function/notificationservice.function.csproj -c Release -o ./publish
 
     - name: Login to Azure
       uses: azure/login@v2
@@ -51,8 +51,8 @@ jobs:
       with:
         inlineScript: |
           az functionapp config dapr component set \
-            --dapr-component-name pubsub \
             --app-name healthcare-notification \
+            --dapr-component-name pubsub \
             --resource-group healthcare-rg \
             --yaml ./dapr/components/pubsub.yaml
 
