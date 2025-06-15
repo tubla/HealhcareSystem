@@ -2,9 +2,11 @@
 using authentication.services.V1.Extensions;
 using authentication.services.V1.Mapping;
 using Azure.Identity;
+using Azure.Security.KeyVault.Secrets;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Azure;
+using Microsoft.Extensions.Configuration.AzureAppConfiguration;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
@@ -46,12 +48,49 @@ internal static class ServiceCollectionExtension
         });
     }
 
+    //private static void AddAzureAppConfigutaion(ConfigurationManager configuration)
+    //{
+    //    configuration.AddAzureAppConfiguration(options =>
+    //    {
+    //        options
+    //            .Connect(configuration.GetSection("AppConfiguration:ConnectionString").Value)
+    //            .UseFeatureFlags();
+    //    });
+    //}
+
     private static void AddAzureAppConfigutaion(ConfigurationManager configuration)
     {
+        var connectionString = configuration.GetSection("AppConfiguration:ConnectionString").Value;
+        if (string.IsNullOrEmpty(connectionString))
+        {
+            throw new ArgumentException("AppConfiguration:ConnectionString is missing or empty.");
+        }
+
+        // Handle secret:// reference
+        if (connectionString.StartsWith("secret://"))
+        {
+            // Extract vault and secret name from secret://healthcare-vault/AppConfigConnection
+            var parts = connectionString.Replace("secret://", "").Split('/');
+            if (parts.Length != 2)
+            {
+                throw new ArgumentException("Invalid secret reference format in AppConfiguration:ConnectionString.");
+            }
+            var vaultName = parts[0];
+            var secretName = parts[1];
+            var vaultUri = $"https://{vaultName}.vault.azure.net/";
+
+            // Use managed identity to retrieve secret
+            var secretClient = new SecretClient(new Uri(vaultUri), new DefaultAzureCredential());
+            var secret = secretClient.GetSecret(secretName).Value;
+            connectionString = secret.Value;
+        }
+
         configuration.AddAzureAppConfiguration(options =>
         {
             options
-                .Connect(configuration.GetSection("AppConfiguration__ConnectionString").Value)
+                .Connect(connectionString)
+                .Select(KeyFilter.Any, LabelFilter.Null)
+                .ConfigureKeyVault(kv => kv.SetCredential(new DefaultAzureCredential()))
                 .UseFeatureFlags();
         });
     }
@@ -71,10 +110,10 @@ internal static class ServiceCollectionExtension
                     ValidateAudience = true,
                     ValidateLifetime = true,
                     ValidateIssuerSigningKey = true,
-                    ValidIssuer = configuration["Jwt__Issuer"],
-                    ValidAudience = configuration["Jwt__Audience"],
+                    ValidIssuer = configuration["Jwt:Issuer"],
+                    ValidAudience = configuration["Jwt:Audience"],
                     IssuerSigningKey = new SymmetricSecurityKey(
-                        Encoding.UTF8.GetBytes(configuration["Jwt__Key"]!)
+                        Encoding.UTF8.GetBytes(configuration["Jwt:Key"]!)
                     ),
                 };
             });
