@@ -50,14 +50,8 @@ jobs:
       uses: azure/CLI@v2
       with:
         inlineScript: |
-          az functionapp config dapr set \
-            --name healthcare-notification \
-            --resource-group healthcare-rg \
-            --app-id notification-service \
-            --app-port 8080 \
-            --enabled true
           az functionapp config dapr component set \
-            --name pubsub \
+            --dapr-component-name pubsub \
             --app-name healthcare-notification \
             --resource-group healthcare-rg \
             --yaml ./dapr/components/pubsub.yaml
