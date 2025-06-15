@@ -1,5 +1,4 @@
-﻿using System.Text;
-using authentication.models.V1.Context;
+﻿using authentication.models.V1.Context;
 using authentication.services.V1.Extensions;
 using authentication.services.V1.Mapping;
 using Azure.Identity;
@@ -7,6 +6,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Azure;
 using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 namespace authentication.api.V1.Extensions;
 
@@ -51,7 +51,7 @@ internal static class ServiceCollectionExtension
         configuration.AddAzureAppConfiguration(options =>
         {
             options
-                .Connect(configuration.GetSection("AppConfiguration:ConnectionString").Value)
+                .Connect(configuration.GetSection("AppConfiguration__ConnectionString").Value)
                 .UseFeatureFlags();
         });
     }
@@ -71,10 +71,10 @@ internal static class ServiceCollectionExtension
                     ValidateAudience = true,
                     ValidateLifetime = true,
                     ValidateIssuerSigningKey = true,
-                    ValidIssuer = configuration["Jwt:Issuer"],
-                    ValidAudience = configuration["Jwt:Audience"],
+                    ValidIssuer = configuration["Jwt__Issuer"],
+                    ValidAudience = configuration["Jwt__Audience"],
                     IssuerSigningKey = new SymmetricSecurityKey(
-                        Encoding.UTF8.GetBytes(configuration["Jwt:Key"]!)
+                        Encoding.UTF8.GetBytes(configuration["Jwt__Key"]!)
                     ),
                 };
             });

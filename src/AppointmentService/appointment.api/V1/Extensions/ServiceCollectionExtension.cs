@@ -53,7 +53,7 @@ internal static class ServiceCollectionExtension
         configuration.AddAzureAppConfiguration(options =>
         {
             options
-                .Connect(configuration.GetSection("AppConfiguration:ConnectionString").Value)
+                .Connect(configuration.GetSection("AppConfiguration__ConnectionString").Value)
                 .UseFeatureFlags();
         });
     }
@@ -73,10 +73,10 @@ internal static class ServiceCollectionExtension
                     ValidateAudience = true,
                     ValidateLifetime = true,
                     ValidateIssuerSigningKey = true,
-                    ValidIssuer = configuration["Jwt:Issuer"],
-                    ValidAudience = configuration["Jwt:Audience"],
+                    ValidIssuer = configuration["Jwt__Issuer"],
+                    ValidAudience = configuration["Jwt__Audience"],
                     IssuerSigningKey = new SymmetricSecurityKey(
-                        Encoding.UTF8.GetBytes(configuration["Jwt:Key"]!)
+                        Encoding.UTF8.GetBytes(configuration["Jwt__Key"]!)
                     ),
                 };
             });
