@@ -49,18 +49,20 @@ jobs:
           # Debug: Log parsed JSON
           yq e -o=json src/AppointmentService/dev.appconfig.yml > appointment.json
           cat appointment.json
-          # Process keys
+          # Debug: Log jq output
           jq -r '
             to_entries[] |
-            {key: .key, value: .value} |
             if (.value | type == "object" and .value.type == "keyvault") then
-              [.key, .value.vaultUri, .value.secretName]
+              [.key, "", .value.vaultUri, .value.secretName] | join("\t")
             elif (.value | type == "string") then
-              [.key, .value, null, null]
+              [.key, .value, "", ""] | join("\t")
             else
               empty
             end
-          ' appointment.json | while IFS=$'\t' read -r key value vaultUri secretName; do
+          ' appointment.json > appointment_keys.txt
+          cat appointment_keys.txt
+          # Process keys
+          while IFS=$'\t' read -r key value vaultUri secretName; do
             echo "Processing key: $key"
             if [ -n "$vaultUri" ] && [ -n "$secretName" ]; then
               # Check for existing KeyVault reference
@@ -78,7 +80,7 @@ jobs:
                   exit 1
                 }
               fi
-            elif [ -n "$value" ]; then
+            elif [ -n "$key" ] && [ -n "$value" ]; then
               # Check for existing regular key
               existing_value=$(az appconfig kv show --name healthcare-appconfig --resource-group healthcare-rg --key "$key" --query value -o tsv 2>/dev/null || echo "")
               echo "Existing value: $existing_value, New value: $value"
@@ -92,9 +94,9 @@ jobs:
                 }
               fi
             else
-              echo "Skipping invalid key: $key (empty value or missing vaultUri/secretName)"
+              echo "Skipping invalid key: $key (empty key, value, or missing vaultUri/secretName)"
             fi
-          done
+          done < appointment_keys.txt
         else
           echo "ERROR: src/AppointmentService/dev.appconfig.yml not found"
           exit 1
@@ -109,18 +111,20 @@ jobs:
           # Debug: Log parsed JSON
           yq e -o=json src/AuthenticationService/dev.appconfig.yml > auth.json
           cat auth.json
-          # Process keys
+          # Debug: Log jq output
           jq -r '
             to_entries[] |
-            {key: .key, value: .value} |
             if (.value | type == "object" and .value.type == "keyvault") then
-              [.key, .value.vaultUri, .value.secretName]
+              [.key, "", .value.vaultUri, .value.secretName] | join("\t")
             elif (.value | type == "string") then
-              [.key, .value, null, null]
+              [.key, .value, "", ""] | join("\t")
             else
               empty
             end
-          ' auth.json | while IFS=$'\t' read -r key value vaultUri secretName; do
+          ' auth.json > auth_keys.txt
+          cat auth_keys.txt
+          # Process keys
+          while IFS=$'\t' read -r key value vaultUri secretName; do
             echo "Processing key: $key"
             if [ -n "$vaultUri" ] && [ -n "$secretName" ]; then
               # Check for existing KeyVault reference
@@ -138,7 +142,7 @@ jobs:
                   exit 1
                 }
               fi
-            elif [ -n "$value" ]; then
+            elif [ -n "$key" ] && [ -n "$value" ]; then
               # Check for existing regular key
               existing_value=$(az appconfig kv show --name healthcare-appconfig --resource-group healthcare-rg --key "$key" --query value -o tsv 2>/dev/null || echo "")
               echo "Existing value: $existing_value, New value: $value"
@@ -152,9 +156,9 @@ jobs:
                 }
               fi
             else
-              echo "Skipping invalid key: $key (empty value or missing vaultUri/secretName)"
+              echo "Skipping invalid key: $key (empty key, value, or missing vaultUri/secretName)"
             fi
-          done
+          done < auth_keys.txt
         else
           echo "ERROR: src/AuthenticationService/dev.appconfig.yml not found"
           exit 1
