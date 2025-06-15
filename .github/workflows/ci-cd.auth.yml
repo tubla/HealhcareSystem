@@ -4,14 +4,20 @@ on:
   workflow_dispatch:
   push:
     branches: [ main ]
-    paths:      
+    paths:
       - 'src/AuthenticationService/**'
       - '.github/workflows/ci-cd.auth.yml'
+      - '.github/workflows/ci-cd.appointment.yml'
+      - '.github/workflows/ci-cd.notification.yml'
+      - 'dapr/components/pubsub.yaml'
   pull_request:
     branches: [ main ]
     paths:
       - 'src/AuthenticationService/**'
       - '.github/workflows/ci-cd.auth.yml'
+      - '.github/workflows/ci-cd.appointment.yml'
+      - '.github/workflows/ci-cd.notification.yml'
+      - 'dapr/components/pubsub.yaml'
 
 jobs:
   build-and-deploy:

@@ -7,11 +7,17 @@ on:
     paths:
       - 'src/AppointmentService/**'
       - '.github/workflows/ci-cd.appointment.yml'
+      - '.github/workflows/ci-cd.auth.yml'
+      - '.github/workflows/ci-cd.notification.yml'
+      - 'dapr/components/pubsub.yaml'
   pull_request:
     branches: [ main ]
     paths:
       - 'src/AppointmentService/**'
       - '.github/workflows/ci-cd.appointment.yml'
+      - '.github/workflows/ci-cd.auth.yml'
+      - '.github/workflows/ci-cd.notification.yml'
+      - 'dapr/components/pubsub.yaml'
 
 jobs:
   build-and-deploy:
@@ -33,7 +39,7 @@ jobs:
       run: dotnet build src/AppointmentService/appointment.api/appointment.api.csproj --no-restore -c Release
 
     - name: Login to Azure
-      uses: actions/login@v2
+      uses: azure/login@v2
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
 
