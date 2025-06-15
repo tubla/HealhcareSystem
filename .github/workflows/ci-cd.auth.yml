@@ -1,6 +1,7 @@
 name: Auth Service CI/CD
 
 on:
+  workflow_dispatch:
   push:
     branches: [ main ]
     paths:
@@ -15,10 +16,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout code
+      uses: actions/checkout@v4
 
     - name: Setup .NET
-      uses: actions/setup-dotnet@v3
+      uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '8.0.x'
 
@@ -29,24 +31,35 @@ jobs:
       run: dotnet build src/AuthenticationService/authentication.api/authentication.api.csproj --no-restore -c Release
 
     - name: Login to Azure
-      uses: azure/login@v1
+      uses: azure/login@v2
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-    - name: Login to Azure Container Registry
-      uses: azure/docker-login@v1
-      with:
-        login-server: ${{ secrets.ACR_REGISTRY }}
-        username: ${{ secrets.ACR_USERNAME }}
-        password: ${{ secrets.ACR_PASSWORD }}
-
     - name: Build and push Docker image
-      run: |
-        docker build -t ${{ secrets.ACR_REGISTRY }}/auth-service:${{ github.sha }} -f src/AuthenticationService/authentication.api/Dockerfile src/AuthenticationService
-        docker push ${{ secrets.ACR_REGISTRY }}/auth-service:${{ github.sha }}
+      uses: docker/build-push-action@v6
+      with:
+        context: .
+        file: src/AuthenticationService/authentication.api/Dockerfile
+        push: true
+        tags: |
+          ${{ secrets.ACR_REGISTRY }}/auth-service:${{ github.sha }}
+          ${{ secrets.ACR_REGISTRY }}/auth-service:latest
+        platforms: linux/amd64
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+    - name: Apply Dapr Components
+      uses: azure/CLI@v2
+      with:
+        inlineScript: |
+          az containerapp env dapr-component set \
+            --name pubsub \
+            --environment healthcare-ca-env \
+            --resource-group healthcare-rg \
+            --yaml ./dapr/components/pubsub.yaml
 
     - name: Deploy to Azure Container App
-      uses: azure/CLI@v1
+      uses: azure/CLI@v2
       with:
         inlineScript: |
           az containerapp create \
@@ -67,7 +80,6 @@ jobs:
             --enable-dapr \
             --dapr-app-id auth-service \
             --dapr-app-port 8080 \
-            --dapr-components ./dapr/components \
             --env-vars \
               "ASPNETCORE_ENVIRONMENT=Development" \
               "KeyVault__VaultUri=https://healthcare-vault.vault.azure.net/" \
@@ -76,9 +88,5 @@ jobs:
               "Jwt__Key=secret://healthcare-vault/JwtKey" \
               "Jwt__Issuer=HealthcareAuthService" \
               "Jwt__Audience=HealthcareApi" \
-              "ApplicationInsights__ConnectionString=secret://healthcare-vault/AppInsightsConnection"
-
-          az containerapp update \
-            --name auth-service \
-            --resource-group healthcare-rg \
-            --image ${{ secrets.ACR_REGISTRY }}/auth-service:${{ github.sha }}
+              "ApplicationInsights__ConnectionString=secret://healthcare-vault/AppInsightsConnection" \
+              "Dapr__PubSubName=pubsub"
