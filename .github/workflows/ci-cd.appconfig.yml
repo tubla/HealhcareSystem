@@ -50,7 +50,18 @@ jobs:
           yq e -o=json src/AppointmentService/dev.appconfig.yml > appointment.json
           cat appointment.json
           # Process keys
-          jq -r 'paths(scalars) as $p | {key: ($p | join(":")), value: getpath($p)} | select(.value != null) | if .value.type == "keyvault" then [.key, .value.vaultUri, .value.secretName] else [.key, .value] end' appointment.json | while IFS=$'\t' read -r key value vaultUri secretName; do
+          jq -r '
+            paths as $p |
+            {key: ($p | join(":")), value: getpath($p)} |
+            select(.value != null) |
+            if (.value | type == "object" and .value.type == "keyvault") then
+              [.key, .value.vaultUri, .value.secretName]
+            elif (.value | type == "string") then
+              [.key, .value, null, null]
+            else
+              empty
+            end
+          ' appointment.json | while IFS=$'\t' read -r key value vaultUri secretName; do
             echo "Processing key: $key"
             if [ -n "$vaultUri" ] && [ -n "$secretName" ]; then
               # Check for existing KeyVault reference
@@ -59,77 +70,4 @@ jobs:
               existing_vault_id=$(echo "$existing" | jq -r .vaultId)
               expected_vault_id="${vaultUri}secrets/${secretName}"
               echo "Existing contentType: $existing_content_type, vaultId: $existing_vault_id"
-              if [ "$existing_content_type" = "application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8" ] && [ "$existing_vault_id" = "$expected_vault_id" ]; then
-                echo "Skipping duplicate KeyVault reference: $key"
-              else
-                echo "Setting KeyVault reference: $key (vaultUri: $vaultUri, secretName: $secretName)"
-                az appconfig kv set-keyvault --name healthcare-appconfig --resource-group healthcare-rg --key "$key" --vault-url "$vaultUri" --secret-name "$secretName" --yes || {
-                  echo "ERROR: Failed to set KeyVault reference: $key"
-                  exit 1
-                }
-              fi
-            else
-              # Check for existing regular key
-              existing_value=$(az appconfig kv show --name healthcare-appconfig --resource-group healthcare-rg --key "$key" --query value -o tsv 2>/dev/null || echo "")
-              echo "Existing value: $existing_value, New value: $value"
-              if [ "$existing_value" = "$value" ]; then
-                echo "Skipping duplicate key: $key"
-              else
-                echo "Setting key: $key (value: $value)"
-                az appconfig kv set --name healthcare-appconfig --resource-group healthcare-rg --key "$key" --value "$value" --yes || {
-                  echo "ERROR: Failed to set key: $key"
-                  exit 1
-                }
-              fi
-            fi
-          done
-        else
-          echo "ERROR: src/AppointmentService/dev.appconfig.yml not found"
-        fi
-
-    - name: Sync AuthenticationService App Configuration
-      run: |
-        if [ -f src/AuthenticationService/dev.appconfig.yml ]; then
-          echo "Processing AuthenticationService dev.appconfig.yml"
-          # Debug: Log raw YAML content
-          cat src/AuthenticationService/dev.appconfig.yml
-          # Debug: Log parsed JSON
-          yq e -o=json src/AuthenticationService/dev.appconfig.yml > auth.json
-          cat auth.json
-          # Process keys
-          jq -r 'paths(scalars) as $p | {key: ($p | join(":")), value: getpath($p)} | select(.value != null) | if .value.type == "keyvault" then [.key, .value.vaultUri, .value.secretName] else [.key, .value] end' auth.json | while IFS=$'\t' read -r key value vaultUri secretName; do
-            echo "Processing key: $key"
-            if [ -n "$vaultUri" ] && [ -n "$secretName" ]; then
-              # Check for existing KeyVault reference
-              existing=$(az appconfig kv show --name healthcare-appconfig --resource-group healthcare-rg --key "$key" --query "{contentType: contentType, vaultId: value}" -o json 2>/dev/null || echo "{}")
-              existing_content_type=$(echo "$existing" | jq -r .contentType)
-              existing_vault_id=$(echo "$existing" | jq -r .vaultId)
-              expected_vault_id="${vaultUri}secrets/${secretName}"
-              echo "Existing contentType: $existing_content_type, vaultId: $existing_vault_id"
-              if [ "$existing_content_type" = "application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8" ] && [ "$existing_vault_id" = "$expected_vault_id" ]; then
-                echo "Skipping duplicate KeyVault reference: $key"
-              else
-                echo "Setting KeyVault reference: $key (vaultUri: $vaultUri, secretName: $secretName)"
-                az appconfig kv set-keyvault --name healthcare-appconfig --resource-group healthcare-rg --key "$key" --vault-url "$vaultUri" --secret-name "$secretName" --yes || {
-                  echo "ERROR: Failed to set KeyVault reference: $key"
-                  exit 1
-                }
-              fi
-            else
-              # Check for existing regular key
-              existing_value=$(az appconfig kv show --name healthcare-appconfig --resource-group healthcare-rg --key "$key" --query value -o tsv 2>/dev/null || echo "")
-              echo "Existing value: $existing_value, New value: $value"
-              if [ "$existing_value" = "$value" ]; then
-                echo "Skipping duplicate key: $key"
-              else
-                echo "Setting key: $key (value: $value)"
-                az appconfig kv set --name healthcare-appconfig --resource-group healthcare-rg --key "$key" --value "$value" --yes || {
-                  echo "ERROR: Failed to set key: $key"
-                  exit 1
-                }
-              fi
-            fi
-          done
-        else
-          echo "ERROR: src/AuthenticationService/dev.appconfig.yml not found"
-        fi
+              if [ "$existing_content_type" = "application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8" ] && [ "$existing_vault_id" = "$expected
