@@ -9,7 +9,10 @@ namespace authentication.api.V1.Extensions
         public static void AddAzureAppConfigurationWithSecrets(this ConfigurationManager configuration)
         {
             // Fetch connection string from Key Vault
-            var secretClient = new SecretClient(new Uri(configuration["KeyVault:VaultUri"]!), new DefaultAzureCredential());
+            var keyVaultUri = configuration["KeyVault:VaultUri"]
+                    ?? Environment.GetEnvironmentVariable("KeyVault:VaultUri")
+                    ?? "https://healthcare-vault.vault.azure.net/";
+            var secretClient = new SecretClient(new Uri(keyVaultUri), new DefaultAzureCredential());
             var connectionString = secretClient.GetSecret("AppConfigConnection").Value.Value;
 
             if (string.IsNullOrEmpty(connectionString))

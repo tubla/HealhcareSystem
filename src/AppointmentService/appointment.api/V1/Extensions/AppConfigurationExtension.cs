@@ -9,9 +9,12 @@ namespace appointment.api.V1.Extensions
         public static void AddAzureAppConfigurationWithSecrets(this ConfigurationManager configuration, ILogger logger)
         {
             logger.LogInformation($"Entering : AddAzureAppConfigurationWithSecrets");
+            var keyVaultUri = configuration["KeyVault:VaultUri"]
+                    ?? Environment.GetEnvironmentVariable("KeyVault:VaultUri")
+                    ?? "https://healthcare-vault.vault.azure.net/";
             // Fetch connection string from Key Vault
-            logger.LogInformation($"KeyVault Url : {configuration["KeyVault:VaultUri"]!}");
-            var secretClient = new SecretClient(new Uri(configuration["KeyVault:VaultUri"]!), new DefaultAzureCredential());
+            logger.LogInformation($"KeyVault Url : {keyVaultUri}");
+            var secretClient = new SecretClient(new Uri(keyVaultUri), new DefaultAzureCredential());
             var connectionString = secretClient.GetSecret("AppConfigConnection").Value.Value;
             logger.LogInformation($"AppConfig Connection String : {connectionString}");
             if (string.IsNullOrEmpty(connectionString))
