@@ -51,9 +51,8 @@ jobs:
           cat appointment.json
           # Process keys
           jq -r '
-            paths as $p |
-            {key: ($p | join(":")), value: getpath($p)} |
-            select(.value != null) |
+            to_entries[] |
+            {key: .key, value: .value} |
             if (.value | type == "object" and .value.type == "keyvault") then
               [.key, .value.vaultUri, .value.secretName]
             elif (.value | type == "string") then
@@ -69,7 +68,7 @@ jobs:
               existing_content_type=$(echo "$existing" | jq -r .contentType)
               existing_vault_id=$(echo "$existing" | jq -r .vaultId)
               expected_vault_id="${vaultUri}secrets/${secretName}"
-              echo "Existing contentType: $existing_content_type, vaultId: $existing_vault_id"
+              echo "Existing contentType: $existing_content_type, vaultId: $existing_vault_id, Expected vaultId: $expected_vault_id"
               if [ "$existing_content_type" = "application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8" ] && [ "$existing_vault_id" = "$expected_vault_id" ]; then
                 echo "Skipping duplicate KeyVault reference: $key"
               else
@@ -79,7 +78,7 @@ jobs:
                   exit 1
                 }
               fi
-            else
+            elif [ -n "$value" ]; then
               # Check for existing regular key
               existing_value=$(az appconfig kv show --name healthcare-appconfig --resource-group healthcare-rg --key "$key" --query value -o tsv 2>/dev/null || echo "")
               echo "Existing value: $existing_value, New value: $value"
@@ -92,10 +91,13 @@ jobs:
                   exit 1
                 }
               fi
+            else
+              echo "Skipping invalid key: $key (empty value or missing vaultUri/secretName)"
             fi
           done
         else
           echo "ERROR: src/AppointmentService/dev.appconfig.yml not found"
+          exit 1
         fi
 
     - name: Sync AuthenticationService App Configuration
@@ -109,9 +111,8 @@ jobs:
           cat auth.json
           # Process keys
           jq -r '
-            paths as $p |
-            {key: ($p | join(":")), value: getpath($p)} |
-            select(.value != null) |
+            to_entries[] |
+            {key: .key, value: .value} |
             if (.value | type == "object" and .value.type == "keyvault") then
               [.key, .value.vaultUri, .value.secretName]
             elif (.value | type == "string") then
@@ -127,7 +128,7 @@ jobs:
               existing_content_type=$(echo "$existing" | jq -r .contentType)
               existing_vault_id=$(echo "$existing" | jq -r .vaultId)
               expected_vault_id="${vaultUri}secrets/${secretName}"
-              echo "Existing contentType: $existing_content_type, vaultId: $existing_vault_id"
+              echo "Existing contentType: $existing_content_type, vaultId: $existing_vault_id, Expected vaultId: $expected_vault_id"
               if [ "$existing_content_type" = "application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8" ] && [ "$existing_vault_id" = "$expected_vault_id" ]; then
                 echo "Skipping duplicate KeyVault reference: $key"
               else
@@ -137,7 +138,7 @@ jobs:
                   exit 1
                 }
               fi
-            else
+            elif [ -n "$value" ]; then
               # Check for existing regular key
               existing_value=$(az appconfig kv show --name healthcare-appconfig --resource-group healthcare-rg --key "$key" --query value -o tsv 2>/dev/null || echo "")
               echo "Existing value: $existing_value, New value: $value"
@@ -150,8 +151,11 @@ jobs:
                   exit 1
                 }
               fi
+            else
+              echo "Skipping invalid key: $key (empty value or missing vaultUri/secretName)"
             fi
           done
         else
           echo "ERROR: src/AuthenticationService/dev.appconfig.yml not found"
+          exit 1
         fi
