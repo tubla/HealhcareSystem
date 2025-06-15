@@ -40,30 +40,13 @@ jobs:
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-    - name: Ensure Development Slot Exists
-      uses: azure/CLI@v2
-      with:
-        inlineScript: |
-          az functionapp deployment slot list --name healthcare-notification --resource-group healthcare-rg --query "[?name=='development']" | grep -q development || \
-          az functionapp deployment slot create --name healthcare-notification --resource-group healthcare-rg --slot development
-
     - name: Deploy to Azure Function App
       uses: Azure/functions-action@v1
       with:
         app-name: healthcare-notification
         package: ./publish
-        slot-name: development
         credentials: ${{ secrets.AZURE_CREDENTIALS }}
-
-    - name: Configure Function App Settings
-      uses: azure/CLI@v2
-      with:
-        inlineScript: |
-          az functionapp config appsettings set \
-            --name healthcare-notification \
-            --resource-group healthcare-rg \
-            --slot development \
-            --settings \
-              "ASPNETCORE_ENVIRONMENT=Development" \
-              "EventHubConnection=secret://healthcare-vault/EventHubConnection" \
-              "APPLICATIONINSIGHTS_CONNECTION_STRING=secret://healthcare-vault/AppInsightsConnection"
+        app-settings: |
+          ASPNETCORE_ENVIRONMENT=Development
+          EventHubConnection=secret://healthcare-vault/EventHubConnection
+          APPLICATIONINSIGHTS_CONNECTION_STRING=secret://healthcare-vault/AppInsightsConnection
