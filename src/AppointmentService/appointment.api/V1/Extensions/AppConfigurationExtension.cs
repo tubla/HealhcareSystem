@@ -6,7 +6,7 @@ namespace appointment.api.V1.Extensions
 {
     public static class AppConfigurationExtension
     {
-        public static void AddAzureAppConfigurationWithSecrets(this ConfigurationManager configuration, ILogger<AppConfigurationExtension> logger)
+        public static void AddAzureAppConfigurationWithSecrets(this ConfigurationManager configuration, ILogger logger)
         {
             logger.LogInformation($"Entering : AddAzureAppConfigurationWithSecrets");
             // Fetch connection string from Key Vault
