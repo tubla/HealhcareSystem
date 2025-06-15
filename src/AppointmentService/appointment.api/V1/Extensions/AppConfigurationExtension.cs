@@ -8,26 +8,17 @@ namespace appointment.api.V1.Extensions
     {
         public static void AddAzureAppConfigurationWithSecrets(this ConfigurationManager configuration)
         {
-            var connectionString = configuration["AppConfiguration:ConnectionString"];
+            // Fetch connection string from Key Vault
+            var secretClient = new SecretClient(new Uri(configuration["KeyVaultUrl"]!), new DefaultAzureCredential());
+            var connectionString = secretClient.GetSecret("AppConfigConnection").Value.Value;
+
             if (string.IsNullOrEmpty(connectionString))
-                throw new ArgumentException("AppConfiguration:ConnectionString is missing or empty.");
-
-            if (connectionString.StartsWith("secret://"))
-            {
-                var parts = connectionString.Replace("secret://", "").Split('/');
-                if (parts.Length != 2)
-                    throw new ArgumentException("Invalid secret reference format in AppConfiguration:ConnectionString.");
-
-                var vaultName = parts[0];
-                var secretName = parts[1];
-                var secretClient = new SecretClient(new Uri($"https://{vaultName}.vault.azure.net/"), new DefaultAzureCredential());
-                connectionString = secretClient.GetSecret(secretName).Value.Value;
-            }
+                throw new ArgumentException("Failed to retrieve AppConfiguration connection string from Key Vault.");
 
             configuration.AddAzureAppConfiguration(options =>
             {
                 options.Connect(connectionString)
-                       .Select(KeyFilter.Any)
+                       .Select(KeyFilter.Any, LabelFilter.Null)
                        .ConfigureKeyVault(kv => kv.SetCredential(new DefaultAzureCredential()))
                        .UseFeatureFlags();
             });
