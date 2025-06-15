@@ -1,0 +1,27 @@
+# Configuration variables for AppointmentService
+# Keys will be stored in Azure App Configuration (healthcare-appconfig)
+# Secrets use Key Vault references
+ASPNETCORE_ENVIRONMENT: Development
+KeyVault:VaultUri: https://healthcare-vault.vault.azure.net/
+ConnectionStrings:SqlConnection:
+  type: keyvault
+  vaultUri: https://healthcare-vault.vault.azure.net/
+  secretName: SqlConnection
+AppConfiguration:ConnectionString:
+  type: keyvault
+  vaultUri: https://healthcare-vault.vault.azure.net/
+  secretName: AppConfigConnection
+Jwt:Key:
+  type: keyvault
+  vaultUri: https://healthcare-vault.vault.azure.net/
+  secretName: JwtKey
+Jwt:Issuer: HealthcareAuthService
+Jwt:Audience: HealthcareApi
+ApplicationInsights:ConnectionString:
+  type: keyvault
+  vaultUri: https://healthcare-vault.vault.azure.net/
+  secretName: AppInsightsConnection
+EventHubConnection:
+  type: keyvault
+  vaultUri: https://healthcare-vault.vault.azure.net/
+  secretName: EventHubConnection

@@ -13,6 +13,7 @@ public static class MiddlewarePipelineExtension
             app.UseSwaggerUI();
         }
         app.UseMiddleware<ExceptionMiddleware>();
+        app.UseAzureAppConfiguration();
         app.UseHttpsRedirection();
         app.UseAuthentication();
         app.UseAuthorization();
