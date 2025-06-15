@@ -64,8 +64,7 @@ jobs:
             --name healthcare-ca-env \
             --resource-group healthcare-rg \
             --location eastus \
-            --logs-destination healthcare-appinsights \
-            --logs-connection-string secret://healthcare-vault/AppInsightsConnection
+            --logs-destination none
 
     - name: Deploy to Azure Container App
       uses: azure/CLI@v2
