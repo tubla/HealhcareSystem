@@ -90,11 +90,11 @@ jobs:
             --dapr-app-port 8080 \
             --env-vars \
               "ASPNETCORE_ENVIRONMENT=Development" \
-              "KeyVault__VaultUri=https://healthcare-vault.vault.azure.net/" \
-              "ConnectionStrings__SqlConnection=secret://healthcare-vault/SqlConnection" \
-              "AppConfiguration__ConnectionString=secret://healthcare-vault/AppConfigConnection" \
-              "Jwt__Key=secret://healthcare-vault/JwtKey" \
-              "Jwt__Issuer=HealthcareAuthService" \
-              "Jwt__Audience=HealthcareApi" \
-              "ApplicationInsights__ConnectionString=secret://healthcare-vault/AppInsightsConnection" \
+              "KeyVault:VaultUri=https://healthcare-vault.vault.azure.net/" \
+              "ConnectionStrings:SqlConnection=secret://healthcare-vault/SqlConnection" \
+              "AppConfiguration:ConnectionString=secret://healthcare-vault/AppConfigConnection" \
+              "Jwt:Key=secret://healthcare-vault/JwtKey" \
+              "Jwt:Issuer=HealthcareAuthService" \
+              "Jwt:Audience=HealthcareApi" \
+              "ApplicationInsights:ConnectionString=secret://healthcare-vault/AppInsightsConnection" \
               "EventHubConnection=secret://healthcare-vault/EventHubConnection"
