@@ -54,6 +54,18 @@ jobs:
           ${{ secrets.ACR_REGISTRY }}/appointment-service:${{ github.sha }}
           ${{ secrets.ACR_REGISTRY }}/appointment-service:latest
         platforms: linux/amd64
+    
+    - name: Ensure Container Apps Environment Exists
+      uses: azure/CLI@v2
+      with:
+        inlineScript: |
+          az containerapp env show --name healthcare-ca-env --resource-group healthcare-rg || \
+          az containerapp env create \
+            --name healthcare-ca-env \
+            --resource-group healthcare-rg \
+            --location eastus \
+            --logs-destination application-insights \
+            --logs-connection-string secret://healthcare-vault/AppInsightsConnection
 
     - name: Deploy to Azure Container App
       uses: azure/CLI@v2
