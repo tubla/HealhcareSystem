@@ -37,7 +37,7 @@ jobs:
       - name: Run Flyway Migrations
         run: |
           /usr/local/flyway/flyway \
-            -url="jdbc:sqlserver://your-server.database.windows.net:1433;database=your-db;encrypt=true;authentication=ActiveDirectoryManagedIdentity" \
+            -url="jdbc:sqlserver://healthcare-sql.database.windows.net:1433;database=HealthcareDB;encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=30;authentication=ActiveDirectoryManagedIdentity" \
             -locations="filesystem:src/FlywayMigrations" \
             -schemas="dbo" \
             migrate
