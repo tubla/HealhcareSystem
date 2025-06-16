@@ -86,5 +86,5 @@ jobs:
             --min-replicas 1 \
             --max-replicas 3 \
             --env-vars \
-               "AppConfiguration__ConnectionString=https://healthcare-appconfig.azconfig.io" \
-               "KeyVault__VaultUri=https://healthcare-vault.vault.azure.net/"
+               "KeyVault__VaultUri=https://healthcare-vault.vault.azure.net/" \
+               "AZURE_CLIENT_ID=${{ secrets.AZURE_CLIENT_ID }}"

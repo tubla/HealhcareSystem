@@ -12,12 +12,6 @@ public static class AppConfigurationExtension
         {
             logger?.LogInformation($"Entering : AddAzureAppConfigurationWithSecrets");
 
-            // Prioritize environment variable or configuration
-            //var connectionString = configuration["AppConfiguration:ConnectionString"]
-            //    ?? Environment.GetEnvironmentVariable("AppConfiguration:ConnectionString");
-            //logger?.LogInformation($"AppConfig Connection String : {connectionString}");
-            //if (string.IsNullOrEmpty(connectionString))
-            //{
             var keyVaultUri = configuration["KeyVault:VaultUri"]
                 ?? Environment.GetEnvironmentVariable("KeyVault:VaultUri")
                 ?? "https://healthcare-vault.vault.azure.net/";
@@ -26,11 +20,6 @@ public static class AppConfigurationExtension
             var secretClient = new SecretClient(new Uri(keyVaultUri), new DefaultAzureCredential());
             var connectionString = secretClient.GetSecret("AppConfigConnection").Value.Value;
             logger?.LogInformation($"AppConfig Connection String from KeyVault: {connectionString}");
-            //}
-            //else
-            //{
-            //logger?.LogInformation("Using AppConfiguration connection string from environment variable.");
-            //}
 
             if (string.IsNullOrEmpty(connectionString))
                 throw new ArgumentException("Failed to retrieve AppConfiguration connection string from Key Vault.");
