@@ -63,7 +63,7 @@ jobs:
         env:
           AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
 
-      # Run Flyway migrations using flyway.conf
+      # Run Flyway migrations using flyway.conf.
       - name: Run Flyway Migrations
         run: |
           /usr/local/flyway/flyway \
