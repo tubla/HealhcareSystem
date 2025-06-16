@@ -44,27 +44,31 @@ jobs:
           sudo chmod +x /usr/local/flyway/flyway
         shell: bash
 
-      # Verify AZURE_CLIENT_ID is set
-      - name: Verify Managed Identity Configuration
+      # Verify AZURE_CLIENT_ID and flyway.conf
+      - name: Verify Configuration
         run: |
           if [ -z "$AZURE_CLIENT_ID" ]; then
             echo "ERROR: AZURE_CLIENT_ID is not set"
             exit 1
           else
-            echo "AZURE_CLIENT_ID is set: $AZURE_CLIENT_ID"
+            echo "AZURE_CLIENT_ID is set (value masked for security)"
+          fi
+          if [ ! -f "flyway.conf" ]; then
+            echo "ERROR: flyway.conf not found in repository root"
+            exit 1
+          else
+            echo "flyway.conf found at $(pwd)/flyway.conf"
+            cat flyway.conf
           fi
         env:
           AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
 
-      # Run Flyway migrations
+      # Run Flyway migrations using flyway.conf
       - name: Run Flyway Migrations
         run: |
           /usr/local/flyway/flyway \
-            -url="jdbc:sqlserver://healthcare-sql.database.windows.net:1433;database=HealthcareDB;encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=30;authentication=ActiveDirectoryManagedIdentity" \
+            -configFiles="flyway.conf" \
             -locations="filesystem:src/FlywayMigrations" \
-            -schemas="healthcare" \
-            -connectRetries=5 \
-            -connectRetriesInterval=10 \
             -X \
             migrate
         env:
