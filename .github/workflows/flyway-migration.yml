@@ -44,6 +44,18 @@ jobs:
           sudo chmod +x /usr/local/flyway/flyway
         shell: bash
 
+      # Verify AZURE_CLIENT_ID is set
+      - name: Verify Managed Identity Configuration
+        run: |
+          if [ -z "$AZURE_CLIENT_ID" ]; then
+            echo "ERROR: AZURE_CLIENT_ID is not set"
+            exit 1
+          else
+            echo "AZURE_CLIENT_ID is set: $AZURE_CLIENT_ID"
+          fi
+        env:
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+
       # Run Flyway migrations
       - name: Run Flyway Migrations
         run: |
@@ -53,6 +65,7 @@ jobs:
             -schemas="healthcare" \
             -connectRetries=5 \
             -connectRetriesInterval=10 \
+            -X \
             migrate
         env:
           AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
