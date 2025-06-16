@@ -39,7 +39,7 @@ jobs:
           /usr/local/flyway/flyway \
             -url="jdbc:sqlserver://healthcare-sql.database.windows.net:1433;database=HealthcareDB;encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=30;authentication=ActiveDirectoryManagedIdentity" \
             -locations="filesystem:src/FlywayMigrations" \
-            -schemas="dbo" \
+            -schemas="healthcare" \
             migrate
         env:
           AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
