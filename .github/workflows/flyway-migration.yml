@@ -6,11 +6,13 @@ on:
       - main
     paths:
       - 'src/FlywayMigrations/**' # Trigger only on changes to this folder
+      - '.github/workflows/flyway-migration.yml'
   pull_request:
     branches:
       - main
     paths:
       - 'src/FlywayMigrations/**'
+      - '.github/workflows/flyway-migration.yml'
 
 jobs:
   migrate-and-deploy:
