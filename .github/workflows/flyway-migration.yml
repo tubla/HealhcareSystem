@@ -28,11 +28,11 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
-      # Install Flyway CLI
+      # Install Flyway CLI 11.9.1
       - name: Install Flyway
         run: |
-          wget -qO- https://repo1.maven.org/maven2/org/flywaydb/flyway-commandline/10.20.0/flyway-commandline-10.20.0-linux-x64.tar.gz | tar xvz
-          sudo mv flyway-10.20.0 /usr/local/flyway
+          wget -qO- https://repo1.maven.org/maven2/org/flywaydb/flyway-commandline/11.9.1/flyway-commandline-11.9.1-linux-x64.tar.gz | tar xvz
+          sudo mv flyway-11.9.1 /usr/local/flyway
           sudo chmod +x /usr/local/flyway/flyway
 
       # Run Flyway migrations
@@ -42,6 +42,8 @@ jobs:
             -url="jdbc:sqlserver://healthcare-sql.database.windows.net:1433;database=HealthcareDB;encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=30;authentication=ActiveDirectoryManagedIdentity" \
             -locations="filesystem:src/FlywayMigrations" \
             -schemas="healthcare" \
+            -connectRetries=5 \
+            -connectRetriesInterval=10 \
             migrate
         env:
           AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
