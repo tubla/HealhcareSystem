@@ -44,14 +44,20 @@ jobs:
           sudo chmod +x /usr/local/flyway/flyway
         shell: bash
 
-      # Verify AZURE_CLIENT_ID and flyway.conf
+      # Verify configuration
       - name: Verify Configuration
         run: |
           if [ -z "$AZURE_CLIENT_ID" ]; then
             echo "ERROR: AZURE_CLIENT_ID is not set"
             exit 1
-          else
-            echo "AZURE_CLIENT_ID is set (value masked for security)"
+          fi
+          if [ -z "$AZURE_CLIENT_SECRET" ]; then
+            echo "ERROR: AZURE_CLIENT_SECRET is not set"
+            exit 1
+          fi
+          if [ -z "$AZURE_TENANT_ID" ]; then
+            echo "ERROR: AZURE_TENANT_ID is not set"
+            exit 1
           fi
           if [ ! -f "flyway.conf" ]; then
             echo "ERROR: flyway.conf not found in repository root"
@@ -60,11 +66,10 @@ jobs:
             echo "flyway.conf found at $(pwd)/flyway.conf"
             cat flyway.conf
           fi
-          # Debug managed identity environment
-          echo "Checking managed identity environment..."
-          curl -s -H Metadata:true "http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https://database.windows.net" || echo "Failed to reach IMDS endpoint"
         env:
           AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
 
       # Run Flyway migrations using flyway.conf
       - name: Run Flyway Migrations
@@ -76,5 +81,5 @@ jobs:
             migrate
         env:
           AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
           AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
