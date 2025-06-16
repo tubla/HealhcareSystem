@@ -60,10 +60,13 @@ jobs:
             echo "flyway.conf found at $(pwd)/flyway.conf"
             cat flyway.conf
           fi
+          # Debug managed identity environment
+          echo "Checking managed identity environment..."
+          curl -s -H Metadata:true "http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https://database.windows.net" || echo "Failed to reach IMDS endpoint"
         env:
           AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
 
-      # Run Flyway migrations using flyway.conf.
+      # Run Flyway migrations using flyway.conf
       - name: Run Flyway Migrations
         run: |
           /usr/local/flyway/flyway \
@@ -73,3 +76,5 @@ jobs:
             migrate
         env:
           AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
