@@ -39,6 +39,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NotificationService", "Noti
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "notificationservice.function", "src\NotificationService\notificationservice.function\notificationservice.function.csproj", "{DE76F0D1-BD40-4674-8CFC-DDC81FE94F52}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "FlywayMigrations", "FlywayMigrations", "{A3328FDD-14B2-486E-8DE0-FA70480FB6A7}"
+	ProjectSection(SolutionItems) = preProject
+		flyway.conf = flyway.conf
+		src\FlywayMigrations\V01__CreateHealthcareSchemas.sql = src\FlywayMigrations\V01__CreateHealthcareSchemas.sql
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -104,6 +110,7 @@ Global
 		{E60C83CA-1FD2-43E8-B63A-2E95E26BE448} = {4C3DF2E0-71DE-4414-B22F-928D354A8260}
 		{AC463ACF-FAC8-4419-A551-ADCD154916BC} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{DE76F0D1-BD40-4674-8CFC-DDC81FE94F52} = {AC463ACF-FAC8-4419-A551-ADCD154916BC}
+		{A3328FDD-14B2-486E-8DE0-FA70480FB6A7} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E891FCEC-5112-41F8-A782-0C0E08065396}

@@ -1,0 +1,45 @@
+name: Flyway Migrations and Container App Deployment
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'src/FlywayMigrations/**' # Trigger only on changes to this folder
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'src/FlywayMigrations/**'
+
+jobs:
+  migrate-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      # Checkout the repository
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Set up .NET (if needed for your app build)
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      # Install Flyway CLI
+      - name: Install Flyway
+        run: |
+          wget -qO- https://repo1.maven.org/maven2/org/flywaydb/flyway-commandline/10.20.0/flyway-commandline-10.20.0-linux-x64.tar.gz | tar xvz
+          sudo mv flyway-10.20.0 /usr/local/flyway
+          sudo chmod +x /usr/local/flyway/flyway
+
+      # Run Flyway migrations
+      - name: Run Flyway Migrations
+        run: |
+          /usr/local/flyway/flyway \
+            -url="jdbc:sqlserver://your-server.database.windows.net:1433;database=your-db;encrypt=true;authentication=ActiveDirectoryManagedIdentity" \
+            -locations="filesystem:src/FlywayMigrations" \
+            -schemas="dbo" \
+            migrate
+        env:
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
