@@ -93,8 +93,11 @@ public class AppointmentServiceImpl(
             return Response<IEnumerable<AppointmentDto>>.Fail("Permission denied");
 
         var cacheKey = $"doctor-appointments:{doctorId}";
-        if (_cache.TryGetValue(cacheKey, out IEnumerable<AppointmentDto> cachedAppointments))
+        if (_cache.TryGetValue(cacheKey, out var result) && result is IEnumerable<AppointmentDto> cachedAppointments)
+        {
             return Response<IEnumerable<AppointmentDto>>.Ok(cachedAppointments);
+        }
+
 
         var appointments = await _unitOfWork.Appointments.GetByDoctorIdAsync(doctorId);
         var dtos = _mapper.Map<IEnumerable<AppointmentDto>>(appointments);
