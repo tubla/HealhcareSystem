@@ -47,8 +47,8 @@ jobs:
       # Verify configuration
       - name: Verify Configuration
         run: |
-          if [ -z "$AZURE_CLIENT_ID" ]; then
-            echo "ERROR: AZURE_CLIENT_ID is not set"
+          if [ -z "$AZURE_SP_CLIENT_ID" ]; then
+            echo "ERROR: AZURE_SP_CLIENT_ID is not set"
             exit 1
           fi
           if [ -z "$AZURE_CLIENT_SECRET" ]; then
@@ -67,7 +67,7 @@ jobs:
             cat flyway.conf
           fi
         env:
-          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_SP_CLIENT_ID: ${{ secrets.AZURE_SP_CLIENT_ID }}
           AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
           AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
 
@@ -80,6 +80,6 @@ jobs:
             -X \
             migrate
         env:
-          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_SP_CLIENT_ID: ${{ secrets.AZURE_SP_CLIENT_ID }}
           AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
           AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
