@@ -1,4 +1,3 @@
-```yaml
 name: Flyway Migrations
 
 on:
@@ -57,4 +56,3 @@ jobs:
             migrate
         env:
           AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-```
