@@ -111,16 +111,16 @@ go
 -- patient
 insert into [healthcare].[patient]([name],dob,gender,email,phone,[address],insurance_provider_id,[user_id])
 values
-	('Alice Brown', '1985-03-15', 'F', 'alice.brown@example.com', '9878765665', 1, 5),
-    ('Bob White', '1990-07-22', 'M', 'bob.white@example.com', '8987678445', 2, NULL);
+	('Alice Brown', '1985-03-15', 'F', 'alice.brown@example.com', '9878765665', 'kolding, Poland',1, 5),
+    ('Bob White', '1990-07-22', 'M', 'bob.white@example.com', '8987678445', 'Grenoble, France',2, NULL);
 
 go
 
 -- doctor
 insert into [healthcare].[doctor]([name],license_number,specialization,email,phone,dept_id,[user_id])
 values
-	('Dr. John Smith', 'LIC12345', 'Cardiologist', 'john.smith@example.com', 1, 2),
-    ('Dr. Emily Davis', 'LIC67890', 'Pediatrician', 'emily.davis@example.com', 2, NULL);
+	('Dr. John Smith', 'LIC12345', 'Cardiologist', 'john.smith@example.com','6565787665', 1, 2),
+    ('Dr. Emily Davis', 'LIC67890', 'Pediatrician', 'emily.davis@example.com','8767656556', 2, NULL);
 
 go
 
@@ -157,7 +157,7 @@ values
 go
 
 -- medical records
-insert into medical_record (patient_id,doctor_id,diagnosis,treatment,record_date)
+insert into [healthcare].[medical_record] (patient_id,doctor_id,diagnosis,treatment,record_date)
 values
 	(1, 1, 'Hypertension', 'Prescribed Aspirin', '2025-06-15'),
     (2, 2, 'Ear infection', 'Prescribed Amoxicillin', '2025-06-16');
