@@ -1,14 +1,14 @@
 
 -- medical records
-create table medical_record (
+create table [healthcare].[medical_record] (
     record_id int identity(1,1) primary key,
     patient_id int not null,
     doctor_id int not null,
     diagnosis nvarchar(200) not null,
     treatment nvarchar(200),
     record_date date not null default getdate(),
-    foreign key (patient_id) references patient(patient_id),
-    foreign key (doctor_id) references doctor(doctor_id));
+    foreign key (patient_id) references [healthcare].[patient](patient_id),
+    foreign key (doctor_id) references [healthcare].[doctor](doctor_id));
 
 go
 
