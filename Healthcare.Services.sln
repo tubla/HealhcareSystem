@@ -43,6 +43,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "FlywayMigrations", "FlywayM
 	ProjectSection(SolutionItems) = preProject
 		flyway.conf = flyway.conf
 		src\FlywayMigrations\V01__CreateHealthcareSchemas.sql = src\FlywayMigrations\V01__CreateHealthcareSchemas.sql
+		src\FlywayMigrations\V02__SeedDataIntoHealthcareSchemas.sql = src\FlywayMigrations\V02__SeedDataIntoHealthcareSchemas.sql
 	EndProjectSection
 EndProject
 Global
