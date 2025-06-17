@@ -2,6 +2,7 @@
 using authentication.services.V1.Extensions;
 using authentication.services.V1.Mapping;
 using Azure.Identity;
+using Azure.Security.KeyVault.Secrets;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Azure;
@@ -26,13 +27,36 @@ internal static class ServiceCollectionExtension
         {
             clientBuilder.UseCredential(new DefaultAzureCredential());
         });
-        services.AddDbContext<AuthDbContext>(options =>
-            options.UseSqlServer(configuration.GetConnectionString("SqlConnection"))
-        );
+        AddAuthDbContext(services, configuration);
+
         AddApiVersioning(services);
         AddJwtAuthentication(services, configuration);
         services.AddAutoMapper(typeof(AuthMappingProfile));
         services.AddAuthServices();
+    }
+
+    private static void AddAuthDbContext(IServiceCollection services, ConfigurationManager configuration)
+    {
+        var keyVaultUri = configuration["KeyVault:VaultUri"]
+                ?? Environment.GetEnvironmentVariable("KeyVault:VaultUri")
+                ?? "https://healthcare-vault.vault.azure.net/";
+        var secretClient = new SecretClient(new Uri(keyVaultUri), new DefaultAzureCredential());
+        var sqlConnectionString = secretClient.GetSecret("SqlConnection").Value.Value;
+        services.AddDbContext<AuthDbContext>(options =>
+                    options.UseSqlServer(sqlConnectionString, sql => sql.EnableRetryOnFailure(
+                                            maxRetryCount: 5,
+                                            maxRetryDelay: TimeSpan.FromSeconds(10),
+                                            errorNumbersToAdd: null
+                                        ))
+                           .UseSnakeCaseNamingConvention()
+                );
+
+        services.AddHealthChecks()
+        .AddDbContextCheck<AuthDbContext>(
+        name: "sql-db",
+        failureStatus: Microsoft.Extensions.Diagnostics.HealthChecks.HealthStatus.Unhealthy,
+        tags: new[] { "db", "sql", "auth" }
+        );
     }
 
     private static void AddApiVersioning(this IServiceCollection services)

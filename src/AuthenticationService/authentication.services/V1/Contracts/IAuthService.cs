@@ -5,7 +5,7 @@ namespace authentication.services.V1.Contracts;
 
 public interface IAuthService
 {
-    Task<Response<UserDto>> RegisterAsync(UserDto dto, string password);
-    Task<Response<LoginResponseDto>> LoginAsync(LoginRequestDto request);
-    Task<bool> CheckPermissionAsync(int userId, string permissionName);
+    Task<Response<UserDto>> RegisterAsync(RegisterRequestDto dto, CancellationToken cancellationToken = default);
+    Task<Response<LoginResponseDto>> LoginAsync(LoginRequestDto request, CancellationToken cancellationToken = default);
+    Task<bool> CheckPermissionAsync(int userId, string permissionName, CancellationToken cancellationToken = default);
 }

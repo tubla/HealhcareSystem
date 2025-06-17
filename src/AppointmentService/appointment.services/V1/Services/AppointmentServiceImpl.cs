@@ -24,107 +24,149 @@ public class AppointmentServiceImpl(
     ) : IAppointmentService
 {
     public async Task<Response<AppointmentDto>> CreateAppointmentAsync(
-        AppointmentDto dto,
-        int userId
-    )
+            AppointmentDto dto,
+            int userId,
+            CancellationToken cancellationToken = default)
     {
-        if (!await _authServiceProxy.CheckPermissionAsync(userId, "WriteAppointment"))
-            return Response<AppointmentDto>.Fail("Permission denied");
+        if (dto == null)
+            return Response<AppointmentDto>.Fail("Invalid appointment data");
 
-        if (
-            !await _unitOfWork.Appointments.IsDoctorAvailableAsync(
-                dto.DoctorID,
-                dto.AppointmentDateTime
-            )
-        )
-            return Response<AppointmentDto>.Fail("Doctor not available at this time");
+        if (!await _authServiceProxy.CheckPermissionAsync(userId, "WriteAppointment", cancellationToken))
+            return Response<AppointmentDto>.Fail("Permission denied", 403);
+
+        if (dto.AppointmentDateTime < DateTime.UtcNow)
+            return Response<AppointmentDto>.Fail("Cannot schedule appointments in the past");
+
+        if (!await _unitOfWork.Appointments.IsDoctorAvailableAsync(dto.DoctorId, dto.AppointmentDateTime, cancellationToken))
+            return Response<AppointmentDto>.Fail("Doctor not available at this time", 409);
 
         var appointment = _mapper.Map<Appointment>(dto);
         appointment.Status = "Scheduled";
-        await _unitOfWork.Appointments.AddAsync(appointment);
-        await _unitOfWork.CompleteAsync();
 
-        // Publish event to Event Hub via Dapr
-        var @event = new AppointmentScheduledEvent
-        {
-            AppointmentId = appointment.AppointmentID,
-            PatientId = appointment.PatientID,
-            DoctorId = appointment.DoctorID,
-            AppointmentDateTime = appointment.AppointmentDateTime,
-        };
         try
         {
-            var eventData = new EventData(
-                Encoding.UTF8.GetBytes(JsonSerializer.Serialize(@event))
-            );
-            await _eventHubClient.SendAsync(new[] { eventData });
-            _logger.LogInformation("Published event to Event Hub: AppointmentId {AppointmentId}", @event.AppointmentId);
+            await _unitOfWork.Appointments.AddAsync(appointment, cancellationToken);
+            await _unitOfWork.CompleteAsync(cancellationToken);
+
+            // Publish event to Event Hub
+            var @event = new AppointmentScheduledEvent
+            {
+                AppointmentId = appointment.AppointmentId,
+                PatientId = appointment.PatientId,
+                DoctorId = appointment.DoctorId,
+                AppointmentDateTime = appointment.AppointmentDateTime
+            };
+
+            var eventData = new EventData(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(@event)));
+            await _eventHubClient.SendAsync(new[] { eventData }, cancellationToken);
+            _logger.LogInformation("Published AppointmentScheduledEvent for AppointmentId {AppointmentId}", appointment.AppointmentId);
+
+            // Invalidate cache
+            _cache.Remove($"doctor-appointments:{dto.DoctorId}");
+
+            return Response<AppointmentDto>.Ok(_mapper.Map<AppointmentDto>(appointment));
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to publish event to Event Hub for AppointmentId {AppointmentId}", @event.AppointmentId);
-            // Optionally handle error (e.g., retry or log only)
+            _logger.LogError(ex, "Failed to create appointment for DoctorId {DoctorId}, PatientId {PatientId}", dto.DoctorId, dto.PatientId);
+            return Response<AppointmentDto>.Fail("Failed to create appointment");
         }
-
-        // Invalidate cache
-        _cache.Remove($"doctor-appointments:{dto.DoctorID}");
-
-        return Response<AppointmentDto>.Ok(_mapper.Map<AppointmentDto>(appointment));
     }
 
-    public async Task<Response<AppointmentDto>> GetAppointmentAsync(int id, int userId)
+    public async Task<Response<AppointmentDto>> GetAppointmentAsync(
+        int id,
+        int userId,
+        CancellationToken cancellationToken = default)
     {
-        if (!await _authServiceProxy.CheckPermissionAsync(userId, "ReadAppointment"))
-            return Response<AppointmentDto>.Fail("Permission denied");
+        if (!await _authServiceProxy.CheckPermissionAsync(userId, "ReadAppointment", cancellationToken))
+            return Response<AppointmentDto>.Fail("Permission denied", 403);
 
-        var appointment = await _unitOfWork.Appointments.GetByIdAsync(id);
+        var appointment = await _unitOfWork.Appointments.GetByIdAsync(id, cancellationToken);
         if (appointment == null)
-            return Response<AppointmentDto>.Fail($"Appointment {id} not found");
+            return Response<AppointmentDto>.Fail($"Appointment {id} not found", 404);
 
         return Response<AppointmentDto>.Ok(_mapper.Map<AppointmentDto>(appointment));
     }
 
     public async Task<Response<IEnumerable<AppointmentDto>>> GetDoctorAppointmentsAsync(
         int doctorId,
-        int userId
-    )
+        int userId,
+        CancellationToken cancellationToken = default)
     {
-        if (!await _authServiceProxy.CheckPermissionAsync(userId, "ReadAppointment"))
-            return Response<IEnumerable<AppointmentDto>>.Fail("Permission denied");
+        if (!await _authServiceProxy.CheckPermissionAsync(userId, "ReadAppointment", cancellationToken))
+            return Response<IEnumerable<AppointmentDto>>.Fail("Permission denied", 403);
 
         var cacheKey = $"doctor-appointments:{doctorId}";
-        if (_cache.TryGetValue(cacheKey, out var result) && result is IEnumerable<AppointmentDto> cachedAppointments)
+        if (_cache.TryGetValue(cacheKey, out IEnumerable<AppointmentDto>? cachedAppointments))
         {
-            return Response<IEnumerable<AppointmentDto>>.Ok(cachedAppointments);
+            _logger.LogInformation("Cache hit for doctor appointments: {CacheKey}", cacheKey);
+            return Response<IEnumerable<AppointmentDto>>.Ok(cachedAppointments!);
         }
 
+        try
+        {
+            var appointments = await _unitOfWork.Appointments.GetByDoctorIdAsync(doctorId, cancellationToken);
+            var dtos = _mapper.Map<IEnumerable<AppointmentDto>>(appointments);
 
-        var appointments = await _unitOfWork.Appointments.GetByDoctorIdAsync(doctorId);
-        var dtos = _mapper.Map<IEnumerable<AppointmentDto>>(appointments);
+            var cacheOptions = new MemoryCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5),
+                SlidingExpiration = TimeSpan.FromMinutes(2)
+            };
+            _cache.Set(cacheKey, dtos, cacheOptions);
+            _logger.LogInformation("Cached doctor appointments: {CacheKey}", cacheKey);
 
-        _cache.Set(cacheKey, dtos, TimeSpan.FromMinutes(5));
-
-        return Response<IEnumerable<AppointmentDto>>.Ok(dtos);
+            return Response<IEnumerable<AppointmentDto>>.Ok(dtos);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to retrieve appointments for DoctorId {DoctorId}", doctorId);
+            return Response<IEnumerable<AppointmentDto>>.Fail("Failed to retrieve appointments");
+        }
     }
 
-    public async Task<Response<AppointmentDto>> CancelAppointmentAsync(int id, int userId)
+    public async Task<Response<AppointmentDto>> CancelAppointmentAsync(
+        int id,
+        int userId,
+        CancellationToken cancellationToken = default)
     {
-        if (!await _authServiceProxy.CheckPermissionAsync(userId, "CancelAppointment"))
-            return Response<AppointmentDto>.Fail("Permission denied");
+        if (!await _authServiceProxy.CheckPermissionAsync(userId, "CancelAppointment", cancellationToken))
+            return Response<AppointmentDto>.Fail("Permission denied", 403);
 
-        var appointment = await _unitOfWork.Appointments.GetByIdAsync(id);
+        var appointment = await _unitOfWork.Appointments.GetByIdAsync(id, cancellationToken);
         if (appointment == null)
-            return Response<AppointmentDto>.Fail($"Appointment {id} not found");
+            return Response<AppointmentDto>.Fail($"Appointment {id} not found", 404);
 
         if (appointment.Status == "Cancelled")
-            return Response<AppointmentDto>.Fail("Appointment already cancelled");
+            return Response<AppointmentDto>.Fail("Appointment already cancelled", 400);
 
-        appointment.Status = "Cancelled";
-        await _unitOfWork.CompleteAsync();
+        try
+        {
+            appointment.Status = "Cancelled";
+            await _unitOfWork.CompleteAsync(cancellationToken);
 
-        // Invalidate cache
-        _cache.Remove($"doctor-appointments:{appointment.DoctorID}");
+            // Publish cancellation event
+            var @event = new AppointmentCancelledEvent
+            {
+                AppointmentId = appointment.AppointmentId,
+                PatientId = appointment.PatientId,
+                DoctorId = appointment.DoctorId,
+                AppointmentDateTime = appointment.AppointmentDateTime
+            };
 
-        return Response<AppointmentDto>.Ok(_mapper.Map<AppointmentDto>(appointment));
+            var eventData = new EventData(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(@event)));
+            await _eventHubClient.SendAsync(new[] { eventData }, cancellationToken);
+            _logger.LogInformation("Published AppointmentCancelledEvent for AppointmentId {AppointmentId}", appointment.AppointmentId);
+
+            // Invalidate cache
+            _cache.Remove($"doctor-appointments:{appointment.DoctorId}");
+
+            return Response<AppointmentDto>.Ok(_mapper.Map<AppointmentDto>(appointment));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to cancel appointment {AppointmentId}", id);
+            return Response<AppointmentDto>.Fail("Failed to cancel appointment");
+        }
     }
 }

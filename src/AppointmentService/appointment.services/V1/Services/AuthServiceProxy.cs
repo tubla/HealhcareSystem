@@ -8,7 +8,7 @@ namespace appointment.services.V1.Services;
 
 public class AuthServiceProxy(HttpClient _httpClient, IHttpContextAccessor _httpContextAccessor) : IAuthServiceProxy
 {
-    public async Task<bool> CheckPermissionAsync(int userId, string permissionName)
+    public async Task<bool> CheckPermissionAsync(int userId, string permissionName, CancellationToken cancellationToken = default)
     {
         try
         {

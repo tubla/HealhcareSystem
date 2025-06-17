@@ -5,11 +5,12 @@ namespace appointment.services.V1.Contracts;
 
 public interface IAppointmentService
 {
-    Task<Response<AppointmentDto>> CreateAppointmentAsync(AppointmentDto dto, int userId);
-    Task<Response<AppointmentDto>> GetAppointmentAsync(int id, int userId);
+    Task<Response<AppointmentDto>> CreateAppointmentAsync(AppointmentDto dto, int userId, CancellationToken cancellationToken = default);
+    Task<Response<AppointmentDto>> GetAppointmentAsync(int id, int userId, CancellationToken cancellationToken = default);
     Task<Response<IEnumerable<AppointmentDto>>> GetDoctorAppointmentsAsync(
         int doctorId,
-        int userId
+        int userId,
+        CancellationToken cancellationToken = default
     );
-    Task<Response<AppointmentDto>> CancelAppointmentAsync(int id, int userId);
+    Task<Response<AppointmentDto>> CancelAppointmentAsync(int id, int userId, CancellationToken cancellationToken = default);
 }

@@ -14,40 +14,38 @@ namespace authentication.api.V1.Controllers
         [HttpPost("register")]
         [AllowAnonymous]
         public async Task<ActionResult<Response<UserDto>>> Register(
-            [FromBody] RegisterRequestDto request
+            [FromBody] RegisterRequestDto request,
+            CancellationToken cancellationToken = default
         )
         {
-            var userDto = new UserDto
-            {
-                Username = request.Username,
-                Email = request.Email,
-                RoleID = request.RoleID,
-            };
-            var response = await _authService.RegisterAsync(userDto, request.Password);
+            var response = await _authService.RegisterAsync(request, cancellationToken);
             return response.Success
-                ? CreatedAtAction(nameof(Register), new { id = response.Data!.UserID }, response)
+                ? CreatedAtAction(nameof(Register), new { id = response.Data!.UserId }, response)
                 : BadRequest(response);
         }
 
         [HttpPost("login")]
         [AllowAnonymous]
         public async Task<ActionResult<Response<LoginResponseDto>>> Login(
-            [FromBody] LoginRequestDto request
+            [FromBody] LoginRequestDto request,
+            CancellationToken cancellationToken = default
         )
         {
-            var response = await _authService.LoginAsync(request);
+            var response = await _authService.LoginAsync(request, cancellationToken);
             return response.Success ? Ok(response) : Unauthorized(response);
         }
 
         [HttpPost("check-permission")]
         [Authorize]
         public async Task<ActionResult<bool>> CheckPermission(
-            [FromBody] PermissionCheckRequestDto request
+            [FromBody] PermissionCheckRequestDto request,
+            CancellationToken cancellationToken = default
         )
         {
             var result = await _authService.CheckPermissionAsync(
                 request.UserId,
-                request.PermissionName
+                request.PermissionName,
+                cancellationToken
             );
             return Ok(result);
         }

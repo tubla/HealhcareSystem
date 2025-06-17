@@ -1,11 +1,21 @@
-﻿namespace authentication.models.V1.Db;
+﻿using System.ComponentModel.DataAnnotations.Schema;
 
+namespace authentication.models.V1.Db;
+
+[Table("user", Schema = "healthcare")]
 public class User
 {
-    public int UserID { get; set; }
-    public string Username { get; set; } = string.Empty;
+    [Column("user_id")]
+    public int UserId { get; set; }
+
+    [Column("user_name")]
+    public string UserName { get; set; } = string.Empty;
+
+    [Column("password_hash")]
     public string PasswordHash { get; set; } = string.Empty;
+
+    [Column("email")]
     public string Email { get; set; } = string.Empty;
-    public int RoleID { get; set; }
-    public Role Role { get; set; } = new();
+
+    public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
 }

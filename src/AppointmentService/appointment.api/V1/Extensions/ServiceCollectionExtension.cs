@@ -3,6 +3,7 @@ using appointment.models.V1.Context;
 using appointment.services.V1.Extensions;
 using appointment.services.V1.Mapping;
 using Azure.Identity;
+using Azure.Security.KeyVault.Secrets;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Azure;
@@ -27,14 +28,32 @@ internal static class ServiceCollectionExtension
         {
             clientBuilder.UseCredential(new DefaultAzureCredential());
         });
-        services.AddDbContext<AppointmentDbContext>(options =>
-            options.UseSqlServer(configuration.GetConnectionString("SqlConnection"))
-        );
+        AddAuthDbContext(services, configuration);
         services.AddApiVersioning();
         services.AddJwtAuthentication(configuration);
         services.AddAutoMapper(typeof(AppointmentMappingProfile));
         services.AddHttpClient();
         services.AddAppointmentServices(configuration);
+    }
+
+    private static void AddAuthDbContext(IServiceCollection services, ConfigurationManager configuration)
+    {
+        var keyVaultUri = configuration["KeyVault:VaultUri"]
+                ?? Environment.GetEnvironmentVariable("KeyVault:VaultUri")
+                ?? "https://healthcare-vault.vault.azure.net/";
+        var secretClient = new SecretClient(new Uri(keyVaultUri), new DefaultAzureCredential());
+        var sqlConnectionString = secretClient.GetSecret("SqlConnection").Value.Value;
+        services.AddDbContext<AppointmentDbContext>(options =>
+                    options.UseSqlServer(sqlConnectionString)
+                    .UseSnakeCaseNamingConvention()
+                );
+
+        services.AddHealthChecks()
+        .AddDbContextCheck<AppointmentDbContext>(
+        name: "sql-db",
+        failureStatus: Microsoft.Extensions.Diagnostics.HealthChecks.HealthStatus.Unhealthy,
+        tags: new[] { "db", "sql", "auth" }
+        );
     }
 
     private static void AddApiVersioning(this IServiceCollection services)

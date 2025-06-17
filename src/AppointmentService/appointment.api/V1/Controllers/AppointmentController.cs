@@ -1,9 +1,9 @@
-﻿using System.Security.Claims;
-using appointment.models.V1.Dtos;
+﻿using appointment.models.V1.Dtos;
 using appointment.services.V1.Contracts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using shared.Models;
+using System.Security.Claims;
 
 namespace appointment.api.V1.Controllers;
 
@@ -30,7 +30,7 @@ public class AppointmentController : ControllerBase
         return response.Success
             ? CreatedAtAction(
                 nameof(GetAppointment),
-                new { id = response.Data!.AppointmentID },
+                new { id = response.Data!.AppointmentId },
                 response
             )
             : BadRequest(response);

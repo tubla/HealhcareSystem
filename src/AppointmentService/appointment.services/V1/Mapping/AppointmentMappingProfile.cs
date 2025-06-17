@@ -9,19 +9,19 @@ public class AppointmentMappingProfile : Profile
     public AppointmentMappingProfile()
     {
         CreateMap<AppointmentDto, Appointment>()
-            .ForMember(dest => dest.AppointmentID, opt => opt.Ignore())
+            .ForMember(dest => dest.AppointmentId, opt => opt.Ignore())
             .ForMember(dest => dest.Status, opt => opt.Ignore())
-            .ForMember(dest => dest.PatientID, opt => opt.MapFrom(src => src.PatientID))
-            .ForMember(dest => dest.DoctorID, opt => opt.MapFrom(src => src.DoctorID))
+            .ForMember(dest => dest.PatientId, opt => opt.MapFrom(src => src.PatientId))
+            .ForMember(dest => dest.DoctorId, opt => opt.MapFrom(src => src.DoctorId))
             .ForMember(
                 dest => dest.AppointmentDateTime,
                 opt => opt.MapFrom(src => src.AppointmentDateTime)
             );
 
         CreateMap<Appointment, AppointmentDto>()
-            .ForMember(dest => dest.AppointmentID, opt => opt.MapFrom(src => src.AppointmentID))
-            .ForMember(dest => dest.PatientID, opt => opt.MapFrom(src => src.PatientID))
-            .ForMember(dest => dest.DoctorID, opt => opt.MapFrom(src => src.DoctorID))
+            .ForMember(dest => dest.AppointmentId, opt => opt.MapFrom(src => src.AppointmentId))
+            .ForMember(dest => dest.PatientId, opt => opt.MapFrom(src => src.PatientId))
+            .ForMember(dest => dest.DoctorId, opt => opt.MapFrom(src => src.DoctorId))
             .ForMember(
                 dest => dest.AppointmentDateTime,
                 opt => opt.MapFrom(src => src.AppointmentDateTime)

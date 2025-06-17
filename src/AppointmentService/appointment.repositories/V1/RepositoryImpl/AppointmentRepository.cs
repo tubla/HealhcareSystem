@@ -5,32 +5,54 @@ using Microsoft.EntityFrameworkCore;
 
 namespace appointment.repositories.V1.RepositoryImpl;
 
-public class AppointmentRepository(AppointmentDbContext _context) : IAppointmentRepository
+public class AppointmentRepository : IAppointmentRepository
 {
-    public async Task<Appointment?> GetByIdAsync(int id)
+    private readonly AppointmentDbContext _context;
+
+    public AppointmentRepository(AppointmentDbContext context)
     {
-        return await _context.Appointments.FindAsync(id);
+        _context = context;
     }
 
-    public async Task<IEnumerable<Appointment>> GetByDoctorIdAsync(int doctorId)
+    public async Task<Appointment?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
-        return await _context.Appointments.Where(a => a.DoctorID == doctorId).ToListAsync();
+        return await _context.Appointments
+            .FirstOrDefaultAsync(a => a.AppointmentId == id, cancellationToken);
     }
 
-    public async Task<IEnumerable<Appointment>> GetByPatientIdAsync(int patientId)
+    public async Task<IEnumerable<Appointment>> GetByDoctorIdAsync(int doctorId, CancellationToken cancellationToken = default)
     {
-        return await _context.Appointments.Where(a => a.PatientID == patientId).ToListAsync();
+        return await _context.Appointments
+            .Where(a => a.DoctorId == doctorId)
+            .ToListAsync(cancellationToken);
     }
 
-    public async Task AddAsync(Appointment appointment)
+    public async Task<IEnumerable<Appointment>> GetByPatientIdAsync(int patientId, CancellationToken cancellationToken = default)
     {
-        await _context.Appointments.AddAsync(appointment);
+        return await _context.Appointments
+            .Where(a => a.PatientId == patientId)
+            .ToListAsync(cancellationToken);
     }
 
-    public async Task<bool> IsDoctorAvailableAsync(int doctorId, DateTime dateTime)
+    public async Task AddAsync(Appointment appointment, CancellationToken cancellationToken = default)
     {
-        return !await _context.Appointments.AnyAsync(a =>
-            a.DoctorID == doctorId && a.AppointmentDateTime == dateTime && a.Status != "Cancelled"
-        );
+        if (appointment == null)
+            throw new ArgumentNullException(nameof(appointment));
+
+        await _context.Appointments.AddAsync(appointment, cancellationToken);
+    }
+
+    public async Task<bool> IsDoctorAvailableAsync(int doctorId, DateTime dateTime, CancellationToken cancellationToken = default)
+    {
+        // Check for overlapping appointments within a 30-minute window
+        var startTime = dateTime.AddMinutes(-30);
+        var endTime = dateTime.AddMinutes(30);
+
+        return !await _context.Appointments
+            .AnyAsync(a => a.DoctorId == doctorId
+                && a.AppointmentDateTime >= startTime
+                && a.AppointmentDateTime < endTime
+                && a.Status != "Cancelled",
+                cancellationToken);
     }
 }

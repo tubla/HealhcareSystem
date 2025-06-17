@@ -16,6 +16,7 @@ public static class MiddlewarePipelineExtension
         app.UseHttpsRedirection();
         app.UseAuthentication();
         app.UseAuthorization();
+        app.MapHealthChecks("/healthz");
         app.MapControllers();
     }
 }

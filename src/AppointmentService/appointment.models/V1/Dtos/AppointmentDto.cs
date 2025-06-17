@@ -5,13 +5,13 @@ namespace appointment.models.V1.Dtos;
 public class AppointmentDto
 {
     [JsonPropertyName("appointment_id")]
-    public int AppointmentID { get; set; }
+    public int AppointmentId { get; set; }
 
     [JsonPropertyName("patient_id")]
-    public int PatientID { get; set; }
+    public int PatientId { get; set; }
 
     [JsonPropertyName("doctor_id")]
-    public int DoctorID { get; set; }
+    public int DoctorId { get; set; }
 
     [JsonPropertyName("appointment_date_time")]
     public DateTime AppointmentDateTime { get; set; }

@@ -1,27 +1,27 @@
 ﻿using appointment.models.V1.Db;
 using Microsoft.EntityFrameworkCore;
 
-namespace appointment.models.V1.Context
+namespace appointment.models.V1.Context;
+
+public class AppointmentDbContext(DbContextOptions<AppointmentDbContext> options) : DbContext(options)
 {
-    public class AppointmentDbContext : DbContext
+    public DbSet<Appointment> Appointments { get; set; }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        public DbSet<Appointment> Appointments { get; set; }
-
-        public AppointmentDbContext(DbContextOptions<AppointmentDbContext> options)
-            : base(options) { }
-
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        // Appointment entity
+        modelBuilder.Entity<Appointment>(entity =>
         {
-            modelBuilder.Entity<Appointment>(entity =>
-            {
-                entity.HasKey(a => a.AppointmentID);
-                entity.HasIndex(a => new { a.DoctorID, a.AppointmentDateTime }).IsUnique();
-                entity.Property(a => a.Status).HasConversion<string>();
-                entity.ToTable(
-                    "CK_Appointment_Status",
-                    "Status IN ('Scheduled', 'Completed', 'Cancelled')"
-                );
-            });
-        }
+            entity.HasKey(e => e.AppointmentId);
+            entity.Property(e => e.AppointmentId).HasColumnName("appointment_id");
+            entity.Property(e => e.PatientId).HasColumnName("patient_id");
+            entity.Property(e => e.DoctorId).HasColumnName("doctor_id");
+            entity.Property(e => e.AppointmentDateTime).HasColumnName("appointment_date_time");
+            entity.Property(e => e.Status).HasColumnName("status");
+            entity.Property(e => e.Reason).HasColumnName("reason");
+            entity.HasIndex(e => new { e.DoctorId, e.AppointmentDateTime })
+                  .IsUnique()
+                  .HasDatabaseName("uk_appointment");
+        });
     }
 }

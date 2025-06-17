@@ -1,11 +1,14 @@
 ﻿using authentication.models.V1.Context;
 using authentication.repositories.V1.Contracts;
+using Microsoft.EntityFrameworkCore;
 
 namespace authentication.repositories.V1.RepositoryImpl;
 
 public class UnitOfWork(AuthDbContext _context) : IUnitOfWork
 {
     private IUserRepository? _userRepository;
+    private IRoleRepository? _roleRepository;
+    private IPermissionRepository? _permissionRepository;
     public IUserRepository Users
     {
         get
@@ -15,13 +18,46 @@ public class UnitOfWork(AuthDbContext _context) : IUnitOfWork
         }
     }
 
-    public async Task<int> CompleteAsync()
+    public IRoleRepository Roles
     {
-        return await _context.SaveChangesAsync();
+        get
+        {
+            _roleRepository = _roleRepository ?? new RoleRepository(_context);
+            return _roleRepository;
+        }
     }
 
-    public void Dispose()
+    public IPermissionRepository Permissions
     {
-        _context.Dispose();
+        get
+        {
+            _permissionRepository = _permissionRepository ?? new PermissionRepository(_context);
+            return _permissionRepository;
+        }
+    }
+
+    public async Task<T> ExecuteInTransactionAsync<T>(Func<Task<T>> operation, CancellationToken cancellationToken = default)
+    {
+        var strategy = _context.Database.CreateExecutionStrategy();
+        return await strategy.ExecuteAsync(async () =>
+        {
+            await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+            try
+            {
+                var result = await operation();
+                await transaction.CommitAsync(cancellationToken);
+                return result;
+            }
+            catch
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                throw;
+            }
+        });
+    }
+
+    public async Task<int> CompleteAsync(CancellationToken cancellationToken = default)
+    {
+        return await _context.SaveChangesAsync(cancellationToken);
     }
 }

@@ -1,7 +1,4 @@
-﻿using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
-using authentication.models.V1.Db;
+﻿using authentication.models.V1.Db;
 using authentication.models.V1.Dtos;
 using authentication.repositories.V1.Contracts;
 using authentication.services.V1.Contracts;
@@ -9,60 +6,113 @@ using AutoMapper;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using shared.Models;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 
 namespace authentication.services.V1.ServiceImpl;
 
 public class AuthServiceImpl(
     IUnitOfWork _unitOfWork,
     IMapper _mapper,
-    IConfiguration _configuration
-) : IAuthService
+    IConfiguration _configuration) : IAuthService
 {
-    public async Task<Response<UserDto>> RegisterAsync(UserDto dto, string password)
+    public async Task<Response<UserDto>> RegisterAsync(RegisterRequestDto dto, CancellationToken cancellationToken = default)
     {
-        var existingUser = await _unitOfWork.Users.GetByUsernameAsync(dto.Username);
+        if (dto == null || string.IsNullOrWhiteSpace(dto.Username) || string.IsNullOrWhiteSpace(dto.Password))
+            return Response<UserDto>.Fail("Invalid registration data", 400);
+
+        var existingUser = await _unitOfWork.Users.GetByUsernameAsync(dto.Username, cancellationToken);
         if (existingUser != null)
-            return Response<UserDto>.Fail("Username already exists");
+            return Response<UserDto>.Fail("Username already exists", 409);
 
         var user = _mapper.Map<User>(dto);
-        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(password);
-        await _unitOfWork.Users.AddAsync(user);
-        await _unitOfWork.CompleteAsync();
+        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
 
-        return Response<UserDto>.Ok(_mapper.Map<UserDto>(user));
+        // Validate roles
+        if (dto.RoleIds == null || !dto.RoleIds.Any())
+            return Response<UserDto>.Fail("At least one role is required", 400);
+
+        var validRoleIds = new List<int>();
+        foreach (var roleId in dto.RoleIds.Distinct())
+        {
+            var role = await _unitOfWork.Roles.GetByIdAsync(roleId, cancellationToken);
+            if (role == null)
+                return Response<UserDto>.Fail($"Role ID {roleId} does not exist", 400);
+            validRoleIds.Add(roleId);
+        }
+
+        try
+        {
+            return await _unitOfWork.ExecuteInTransactionAsync(async () =>
+            {
+                // Save user to generate UserId
+                await _unitOfWork.Users.AddAsync(user, cancellationToken);
+                await _unitOfWork.CompleteAsync(cancellationToken);
+
+                // Add UserRole entries
+                foreach (var roleId in validRoleIds)
+                {
+                    // Skip if UserRole already exists
+                    var existingUserRole = await _unitOfWork.Users.GetUserRoleAsync(user.UserId, roleId, cancellationToken);
+                    if (existingUserRole != null)
+                        continue;
+
+                    var userRole = new UserRole
+                    {
+                        UserId = user.UserId,
+                        RoleId = roleId
+                    };
+                    await _unitOfWork.Users.AddUserRoleAsync(userRole, cancellationToken);
+                }
+                await _unitOfWork.CompleteAsync(cancellationToken);
+
+                return Response<UserDto>.Ok(_mapper.Map<UserDto>(user));
+            }, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            return Response<UserDto>.Fail($"Failed to register user: {ex.Message}", 500);
+        }
     }
 
-    public async Task<Response<LoginResponseDto>> LoginAsync(LoginRequestDto request)
+    public async Task<Response<LoginResponseDto>> LoginAsync(LoginRequestDto request, CancellationToken cancellationToken = default)
     {
-        var user = await _unitOfWork.Users.GetByUsernameAsync(request.Username);
-        if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
-            return Response<LoginResponseDto>.Fail("Invalid credentials");
+        if (request == null || string.IsNullOrWhiteSpace(request.Username) || string.IsNullOrWhiteSpace(request.Password))
+            return Response<LoginResponseDto>.Fail("Invalid login credentials", 400);
 
-        var token = GenerateJwtToken(user);
+        var user = await _unitOfWork.Users.GetByUsernameAsync(request.Username, cancellationToken);
+        if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
+            return Response<LoginResponseDto>.Fail("Invalid credentials", 401);
+
+        var token = await GenerateJwtTokenAsync(user, cancellationToken);
         var response = new LoginResponseDto { Token = token, User = _mapper.Map<UserDto>(user) };
 
         return Response<LoginResponseDto>.Ok(response);
     }
 
-    public async Task<bool> CheckPermissionAsync(int userId, string permissionName)
+    public async Task<bool> CheckPermissionAsync(int userId, string permissionName, CancellationToken cancellationToken = default)
     {
-        var hasPermission = await _unitOfWork.Users.HasPermissionAsync(userId, permissionName);
+        var hasPermission = await _unitOfWork.Users.HasPermissionAsync(userId, permissionName, cancellationToken);
         if (!hasPermission)
-            throw new services.V1.CustomExceptions.UnauthorizedAccessException(
-                $"User {userId} lacks permission {permissionName}"
-            );
+            throw new CustomExceptions.UnauthorizedAccessException($"User {userId} lacks permission {permissionName}");
 
         return true;
     }
 
-    private string GenerateJwtToken(User user)
+    private async Task<string> GenerateJwtTokenAsync(User user, CancellationToken cancellationToken = default)
     {
-        var claims = new[]
-        {
-            new Claim(ClaimTypes.NameIdentifier, user.UserID.ToString()),
-            new Claim(ClaimTypes.Name, user.Username),
-            new Claim(ClaimTypes.Role, user.Role.RoleName),
-        };
+        var userWithRoles = await _unitOfWork.Users.GetByIdWithRolesAsync(user.UserId, cancellationToken);
+        var roleClaims = userWithRoles!.UserRoles
+            .Select(ur => new Claim(ClaimTypes.Role, ur.Role.RoleName))
+            .ToArray();
+
+        var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
+                new Claim(ClaimTypes.Name, user.UserName)
+            };
+        claims.AddRange(roleClaims);
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512);
@@ -71,7 +121,7 @@ public class AuthServiceImpl(
             issuer: _configuration["Jwt:Issuer"],
             audience: _configuration["Jwt:Audience"],
             claims: claims,
-            expires: DateTime.Now.AddHours(1),
+            expires: DateTime.UtcNow.AddHours(1),
             signingCredentials: creds
         );
 
