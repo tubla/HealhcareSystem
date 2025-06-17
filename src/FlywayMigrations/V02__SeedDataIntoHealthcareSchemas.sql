@@ -27,139 +27,172 @@ go
 --role
 insert into [healthcare].[role](role_name,[description])
 values
-	('Admin', 'Full system access'),
-    ('Doctor', 'Access to clinical data'),
-    ('Nurse', 'Manage appointments'),
-    ('Billing', 'Handle billing'),
-    ('Patient', 'View own data'),
-    ('Inventory', 'Manage medications');
+    ('admin', 'full system access'),
+    ('doctor', 'access to clinical data'),
+    ('nurse', 'manage appointments'),
+    ('billing', 'handle billing'),
+    ('patient', 'view own data'),
+    ('inventory', 'manage medications');
 
 go
 
 --permission
-
 insert into [healthcare].[permission]([permission_name],[description])
 values
-	('ReadPatient', 'View patient details'),
-    ('WritePatient', 'Update patient details'),
-    ('ReadDoctor', 'View doctor details'),
-    ('WriteDoctor', 'Update doctor details'),
-    ('ReadAppointment', 'View appointments'),
-    ('WriteAppointment', 'Create/update appointments'),
-    ('CancelAppointment', 'Cancel appointments'),
-    ('WritePrescription', 'Issue prescriptions'),
-    ('ReadBill', 'View bills'),
-    ('WriteBill', 'Create/update bills'),
-    ('ReadMedicalRecord', 'View medical records'),
-    ('WriteMedicalRecord', 'Create/update medical records'),
-    ('ReadMedication', 'View medications'),
-    ('WriteMedication', 'Update medications'),
-    ('ReadSupplier', 'View suppliers'),
-    ('WriteSupplier', 'Update suppliers');
+    ('readpatient', 'view patient details'),
+    ('writepatient', 'update patient details'),
+    ('readdoctor', 'view doctor details'),
+    ('writedoctor', 'update doctor details'),
+    ('readappointment', 'view appointments'),
+    ('writeappointment', 'create/update appointments'),
+    ('cancelappointment', 'cancel appointments'),
+    ('writeprescription', 'issue prescriptions'),
+    ('readbill', 'view bills'),
+    ('writebill', 'create/update bills'),
+    ('readmedicalrecord', 'view medical records'),
+    ('writemedicalrecord', 'create/update medical records'),
+    ('readmedication', 'view medications'),
+    ('writemedication', 'update medications'),
+    ('readsupplier', 'view suppliers'),
+    ('writesupplier', 'update suppliers');
 
 go
 
--- user_role
-insert into [healthcare].[user_role]([user_id],role_id)
-values
-	(1, 1), -- Admin
-    (2, 2), -- Doctor
-    (3, 3), -- Nurse
-    (4, 4), -- Billing
-    (5, 5), -- Patient
-    (6, 6); -- Inventory
+--user_role
+insert into [healthcare].[user_role](user_id, role_id)
+select u.user_id, r.role_id 
+from [healthcare].[user] u
+inner join [healthcare].[role] r on 
+    (u.user_name = 'admin' and r.role_name = 'admin') or
+    (u.user_name = 'dr_smith' and r.role_name = 'doctor') or
+    (u.user_name = 'nurse_jane' and r.role_name = 'nurse') or
+    (u.user_name = 'billing_staff' and r.role_name = 'billing') or
+    (u.user_name = 'alice_brown' and r.role_name = 'patient') or
+    (u.user_name = 'inventory_mgr' and r.role_name = 'inventory');
 
 go
 
--- role_permission
-insert into [healthcare].[role_permission](role_id,permission_id)
-values
-	(1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (1, 6), (1, 7), (1, 8), (1, 9), (1, 10), (1, 11), (1, 12), (1, 13), (1, 14), (1, 15), (1, 16), -- Admin: All permissions
-    (2, 1), (2, 5), (2, 6), (2, 8), (2, 11), (2, 12), -- Doctor: ReadPatient, Read/WriteAppointment, WritePrescription, Read/WriteMedicalRecord
-    (3, 1), (3, 5), (3, 6), -- Nurse: ReadPatient, Read/WriteAppointment
-    (4, 1), (4, 9), (4, 10), -- Billing: ReadPatient, Read/WriteBill
-    (5, 1), (5, 11), -- Patient: ReadPatient, ReadMedicalRecord (own data only)
-    (6, 13), (6, 14), (6, 15), (6, 16); -- Inventory: Read/WriteMedication, Read/WriteSupplier
+--role_permission
+insert into [healthcare].[role_permission](role_id, permission_id)
+select r.role_id, p.permission_id 
+from [healthcare].[role] r
+inner join [healthcare].[permission] p on
+    (r.role_name = 'admin' and p.permission_name in ('readpatient', 'writepatient', 'readdoctor', 'writedoctor', 'readappointment', 'writeappointment', 'cancelappointment', 'writeprescription', 'readbill', 'writebill', 'readmedicalrecord', 'writemedicalrecord', 'readmedication', 'writemedication', 'readsupplier', 'writesupplier')) or
+    (r.role_name = 'doctor' and p.permission_name in ('readpatient', 'readappointment', 'writeappointment', 'writeprescription', 'readmedicalrecord', 'writemedicalrecord')) or
+    (r.role_name = 'nurse' and p.permission_name in ('readpatient', 'readappointment', 'writeappointment')) or
+    (r.role_name = 'billing' and p.permission_name in ('readpatient', 'readbill', 'writebill')) or
+    (r.role_name = 'patient' and p.permission_name in ('readpatient', 'readmedicalrecord')) or
+    (r.role_name = 'inventory' and p.permission_name in ('readmedication', 'writemedication', 'readsupplier', 'writesupplier'));
 
 go
 
--- supplier
+--supplier
 insert into [healthcare].[supplier]([name],contact)
 values
-	('PharmaCorp', 'supply@pharmacorp.com'), 
-	('MediSupply', 'sales@medisupply.com');
+    ('pharmacorp', 'supply@pharmacorp.com'), 
+    ('medisupply', 'sales@medisupply.com');
 
 go
 
 --department
 insert into [healthcare].[department]([name])
 values
-	('Cardiology'), 
-	('Pediatrics'), 
-	('Neurology');
+    ('cardiology'), 
+    ('pediatrics'), 
+    ('neurology');
 
 go
 
 --insurance_provider
 insert into [healthcare].[insurance_provider]([name],contact)
 values
-	('HealthCare Inc.', 'contact@healthcare.com'), 
-	('MediSure', 'info@medisure.com');
+    ('healthcare inc.', 'contact@healthcare.com'), 
+    ('medisure', 'info@medisure.com');
 
 go
 
--- patient
+--patient
 insert into [healthcare].[patient]([name],dob,gender,email,phone,[address],insurance_provider_id,[user_id])
-values
-	('Alice Brown', '1985-03-15', 'F', 'alice.brown@example.com', '9878765665', 'kolding, Poland',1, 5),
-    ('Bob White', '1990-07-22', 'M', 'bob.white@example.com', '8987678445', 'Grenoble, France',2, NULL);
+select 'alice brown', '1985-03-15', 'f', 'alice.brown@example.com', '9878765665', 'kolding, poland', ip.insurance_provider_id, u.user_id
+from [healthcare].[insurance_provider] ip
+left join [healthcare].[user] u on u.user_name = 'alice_brown'
+where ip.name = 'healthcare inc.'
+union all
+select 'bob white', '1990-07-22', 'm', 'bob.white@example.com', '8987678445', 'grenoble, france', ip.insurance_provider_id, null
+from [healthcare].[insurance_provider] ip
+where ip.name = 'medisure';
 
 go
 
--- doctor
+--doctor
 insert into [healthcare].[doctor]([name],license_number,specialization,email,phone,dept_id,[user_id])
-values
-	('Dr. John Smith', 'LIC12345', 'Cardiologist', 'john.smith@example.com','6565787665', 1, 2),
-    ('Dr. Emily Davis', 'LIC67890', 'Pediatrician', 'emily.davis@example.com','8767656556', 2, NULL);
+select 'dr. john smith', 'lic12345', 'cardiologist', 'john.smith@example.com', '6565787665', d.dept_id, u.user_id
+from [healthcare].[department] d
+left join [healthcare].[user] u on u.user_name = 'dr_smith'
+where d.name = 'cardiology'
+union all
+select 'dr. emily davis', 'lic67890', 'pediatrician', 'emily.davis@example.com', '8767656556', d.dept_id, null
+from [healthcare].[department] d
+where d.name = 'pediatrics';
 
 go
 
--- appointment
+--appointment
 insert into [healthcare].[appointment](patient_id,doctor_id,appointment_date_time,[status],reason)
-values
-	(1, 1, '2025-06-15 10:00', 'Scheduled', 'Heart checkup'),
-    (2, 2, '2025-06-16 14:00', 'Completed', 'Child wellness');
+select p.patient_id, d.doctor_id, '2025-06-15 10:00', 'scheduled', 'heart checkup'
+from [healthcare].[patient] p
+inner join [healthcare].[doctor] d on p.email = 'alice.brown@example.com' and d.email = 'john.smith@example.com'
+union all
+select p.patient_id, d.doctor_id, '2025-06-16 14:00', 'completed', 'child wellness'
+from [healthcare].[patient] p
+inner join [healthcare].[doctor] d on p.email = 'bob.white@example.com' and d.email = 'emily.davis@example.com';
 
 go
 
--- medication
+--medication
 insert into [healthcare].[medication]([name],[type],stock_quantity,unit_cost,supplier_id)
-values
-	('Aspirin', 'Tablet', 100, 0.50, 1),
-    ('Amoxicillin', 'Capsule', 50, 1.20, 2);
+select 'aspirin', 'tablet', 100, 0.50, s.supplier_id
+from [healthcare].[supplier] s
+where s.name = 'pharmacorp'
+union all
+select 'amoxicillin', 'capsule', 50, 1.20, s.supplier_id
+from [healthcare].[supplier] s
+where s.name = 'medisupply';
 
 go
 
--- prescription
+--prescription
 insert into [healthcare].[prescription](appointment_id,medication_id,dosage,duration,issue_date)
-values
-	(1, 1, '1 tablet daily', '7 days', '2025-06-15'),
-    (2, 2, '1 capsule twice daily', '5 days', '2025-06-16');
+select a.appointment_id, m.medication_id, '1 tablet daily', '7 days', '2025-06-15'
+from [healthcare].[appointment] a
+inner join [healthcare].[medication] m on a.reason = 'heart checkup' and m.name = 'aspirin'
+union all
+select a.appointment_id, m.medication_id, '1 capsule twice daily', '5 days', '2025-06-16'
+from [healthcare].[appointment] a
+inner join [healthcare].[medication] m on a.reason = 'child wellness' and m.name = 'amoxicillin';
 
 go
 
--- bill
+--bill
 insert into [healthcare].[bill](appointment_id,patient_id,total_amount,insurance_coverage,payment_status,issue_date)
-values
-	(1, 1, 150.00, 120.00, 'Partial', '2025-06-15'),
-    (2, 2, 100.00, 80.00, 'Pending', '2025-06-16');
+select a.appointment_id, p.patient_id, 150.00, 120.00, 'partial', '2025-06-15'
+from [healthcare].[appointment] a
+inner join [healthcare].[patient] p on a.reason = 'heart checkup' and p.email = 'alice.brown@example.com'
+union all
+select a.appointment_id, p.patient_id, 100.00, 80.00, 'pending', '2025-06-16'
+from [healthcare].[appointment] a
+inner join [healthcare].[patient] p on a.reason = 'child wellness' and p.email = 'bob.white@example.com';
 
 go
 
--- medical records
+--medical_record
 insert into [healthcare].[medical_record] (patient_id,doctor_id,diagnosis,treatment,record_date)
-values
-	(1, 1, 'Hypertension', 'Prescribed Aspirin', '2025-06-15'),
-    (2, 2, 'Ear infection', 'Prescribed Amoxicillin', '2025-06-16');
+select p.patient_id, d.doctor_id, 'hypertension', 'prescribed aspirin', '2025-06-15'
+from [healthcare].[patient] p
+inner join [healthcare].[doctor] d on p.email = 'alice.brown@example.com' and d.email = 'john.smith@example.com'
+union all
+select p.patient_id, d.doctor_id, 'ear infection', 'prescribed amoxicillin', '2025-06-16'
+from [healthcare].[patient] p
+inner join [healthcare].[doctor] d on p.email = 'bob.white@example.com' and d.email = 'emily.davis@example.com';
 
 go
