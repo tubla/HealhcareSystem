@@ -1,4 +1,5 @@
-﻿using authentication.models.V1.Context;
+﻿using authentication.api.V1.Filters;
+using authentication.models.V1.Context;
 using authentication.services.V1.Extensions;
 using authentication.services.V1.Mapping;
 using Azure.Identity;
@@ -7,6 +8,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Azure;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using System.Text;
 
 namespace authentication.api.V1.Extensions;
@@ -20,7 +22,7 @@ internal static class ServiceCollectionExtension
     {
         services.AddControllers();
         services.AddEndpointsApiExplorer();
-        services.AddSwaggerGen();
+        services.AddSwagerUi();
         services.AddAuthorization();
         services.AddApplicationInsightsTelemetry();
         services.AddAzureClients(clientBuilder =>
@@ -33,6 +35,26 @@ internal static class ServiceCollectionExtension
         AddJwtAuthentication(services, configuration);
         services.AddAutoMapper(typeof(AuthMappingProfile));
         services.AddAuthServices();
+    }
+
+    private static void AddSwagerUi(this IServiceCollection services)
+    {
+        services.AddSwaggerGen(options =>
+        {
+            options.SwaggerDoc("v1", new OpenApiInfo { Title = "Healthcare API", Version = "v1" });
+            options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+            {
+                Name = "Authorization",
+                Type = SecuritySchemeType.Http,
+                Scheme = "Bearer",
+                BearerFormat = "JWT",
+                In = ParameterLocation.Header,
+                Description = "Enter 'Bearer {token}' below."
+            });
+
+            // Apply security requirement selectively using the operation filter
+            options.OperationFilter<AuthorizeOperationFilter>();
+        });
     }
 
     private static void AddAuthDbContext(IServiceCollection services, ConfigurationManager configuration)
