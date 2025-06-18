@@ -1,7 +1,7 @@
-﻿namespace doctor.repositories.V1.Contracts;
+﻿namespace patient.repositories.V1.Contracts;
 
 public interface IUnitOfWork
 {
-    IDoctorRepository DoctorRepository { get; }
+    IPatientRepository PatientRepository { get; }
     Task<int> CompleteAsync(CancellationToken cancellationToken = default);
 }

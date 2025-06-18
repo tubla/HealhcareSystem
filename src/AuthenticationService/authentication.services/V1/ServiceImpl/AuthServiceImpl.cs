@@ -22,7 +22,7 @@ public class AuthServiceImpl(
         if (dto == null || string.IsNullOrWhiteSpace(dto.Username) || string.IsNullOrWhiteSpace(dto.Password))
             return Response<UserDto>.Fail("Invalid registration data", 400);
 
-        var existingUser = await _unitOfWork.Users.GetByUsernameAsync(dto.Username, cancellationToken);
+        var existingUser = await _unitOfWork.UserRepository.GetByUsernameAsync(dto.Username, cancellationToken);
         if (existingUser != null)
             return Response<UserDto>.Fail("Username already exists", 409);
 
@@ -36,7 +36,7 @@ public class AuthServiceImpl(
         var validRoleIds = new List<int>();
         foreach (var roleId in dto.RoleIds.Distinct())
         {
-            var role = await _unitOfWork.Roles.GetByIdAsync(roleId, cancellationToken);
+            var role = await _unitOfWork.RoleRepository.GetByIdAsync(roleId, cancellationToken);
             if (role == null)
                 return Response<UserDto>.Fail($"Role ID {roleId} does not exist", 400);
             validRoleIds.Add(roleId);
@@ -47,14 +47,14 @@ public class AuthServiceImpl(
             return await _unitOfWork.ExecuteInTransactionAsync(async () =>
             {
                 // Save user to generate UserId
-                await _unitOfWork.Users.AddAsync(user, cancellationToken);
+                await _unitOfWork.UserRepository.AddAsync(user, cancellationToken);
                 await _unitOfWork.CompleteAsync(cancellationToken);
 
                 // Add UserRole entries
                 foreach (var roleId in validRoleIds)
                 {
                     // Skip if UserRole already exists
-                    var existingUserRole = await _unitOfWork.Users.GetUserRoleAsync(user.UserId, roleId, cancellationToken);
+                    var existingUserRole = await _unitOfWork.UserRepository.GetUserRoleAsync(user.UserId, roleId, cancellationToken);
                     if (existingUserRole != null)
                         continue;
 
@@ -63,7 +63,7 @@ public class AuthServiceImpl(
                         UserId = user.UserId,
                         RoleId = roleId
                     };
-                    await _unitOfWork.Users.AddUserRoleAsync(userRole, cancellationToken);
+                    await _unitOfWork.UserRepository.AddUserRoleAsync(userRole, cancellationToken);
                 }
                 await _unitOfWork.CompleteAsync(cancellationToken);
 
@@ -81,7 +81,7 @@ public class AuthServiceImpl(
         if (request == null || string.IsNullOrWhiteSpace(request.Username) || string.IsNullOrWhiteSpace(request.Password))
             return Response<LoginResponseDto>.Fail("Invalid login credentials", 400);
 
-        var user = await _unitOfWork.Users.GetByUsernameAsync(request.Username, cancellationToken);
+        var user = await _unitOfWork.UserRepository.GetByUsernameAsync(request.Username, cancellationToken);
         if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
             return Response<LoginResponseDto>.Fail("Invalid credentials", 401);
 
@@ -93,7 +93,7 @@ public class AuthServiceImpl(
 
     public async Task<bool> CheckPermissionAsync(int userId, string permissionName, CancellationToken cancellationToken = default)
     {
-        var hasPermission = await _unitOfWork.Users.HasPermissionAsync(userId, permissionName, cancellationToken);
+        var hasPermission = await _unitOfWork.UserRepository.HasPermissionAsync(userId, permissionName, cancellationToken);
         if (!hasPermission)
             throw new CustomExceptions.UnauthorizedAccessException($"User {userId} lacks permission {permissionName}");
 
@@ -102,7 +102,7 @@ public class AuthServiceImpl(
 
     private async Task<string> GenerateJwtTokenAsync(User user, CancellationToken cancellationToken = default)
     {
-        var userWithRoles = await _unitOfWork.Users.GetByIdWithRolesAsync(user.UserId, cancellationToken);
+        var userWithRoles = await _unitOfWork.UserRepository.GetByIdWithRolesAsync(user.UserId, cancellationToken);
         var roleClaims = userWithRoles!.UserRoles
             .Select(ur => new Claim(ClaimTypes.Role, ur.Role.RoleName))
             .ToArray();

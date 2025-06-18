@@ -6,7 +6,7 @@ namespace doctor.repositories.V1.RepositoryImpl
     public class UnitOfWork(DoctorDbContext _context) : IUnitOfWork
     {
         private IDoctorRepository? _doctorRepository;
-        public IDoctorRepository Doctors
+        public IDoctorRepository DoctorRepository
         {
             get
             {

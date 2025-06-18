@@ -26,7 +26,7 @@ public class AppointmentServiceImpl(
     ) : IAppointmentService
 {
     public async Task<Response<AppointmentDto>> CreateAppointmentAsync(
-            AppointmentDto dto,
+            CreateAppointmentDto dto,
             int userId,
             CancellationToken cancellationToken = default)
     {
@@ -39,7 +39,7 @@ public class AppointmentServiceImpl(
         if (dto.AppointmentDateTime < DateTime.UtcNow)
             return Response<AppointmentDto>.Fail("Cannot schedule appointments in the past");
 
-        if (!await _unitOfWork.Appointments.IsDoctorAvailableAsync(dto.DoctorId, dto.AppointmentDateTime, cancellationToken))
+        if (!await _unitOfWork.AppointmentRepository.IsDoctorAvailableAsync(dto.DoctorId, dto.AppointmentDateTime, cancellationToken))
             return Response<AppointmentDto>.Fail("Doctor not available at this time", 409);
 
         var appointment = _mapper.Map<Appointment>(dto);
@@ -47,7 +47,7 @@ public class AppointmentServiceImpl(
 
         try
         {
-            await _unitOfWork.Appointments.AddAsync(appointment, cancellationToken);
+            await _unitOfWork.AppointmentRepository.AddAsync(appointment, cancellationToken);
             await _unitOfWork.CompleteAsync(cancellationToken);
 
             // Publish event to Event Hub
@@ -83,7 +83,7 @@ public class AppointmentServiceImpl(
         if (!await _authServiceProxy.CheckPermissionAsync(userId, RbacPermissions.ReadAppointment, cancellationToken))
             return Response<AppointmentDto>.Fail("Permission denied", 403);
 
-        var appointment = await _unitOfWork.Appointments.GetByIdAsync(id, cancellationToken);
+        var appointment = await _unitOfWork.AppointmentRepository.GetByIdAsync(id, cancellationToken);
         if (appointment == null)
             return Response<AppointmentDto>.Fail($"Appointment {id} not found", 404);
 
@@ -107,7 +107,7 @@ public class AppointmentServiceImpl(
 
         try
         {
-            var appointments = await _unitOfWork.Appointments.GetByDoctorIdAsync(doctorId, cancellationToken);
+            var appointments = await _unitOfWork.AppointmentRepository.GetByDoctorIdAsync(doctorId, cancellationToken);
             var dtos = _mapper.Map<IEnumerable<AppointmentDto>>(appointments);
 
             var cacheOptions = new MemoryCacheEntryOptions
@@ -135,7 +135,7 @@ public class AppointmentServiceImpl(
         if (!await _authServiceProxy.CheckPermissionAsync(userId, RbacPermissions.WriteAppointment, cancellationToken))
             return Response<AppointmentDto>.Fail("Permission denied", 403);
 
-        var appointment = await _unitOfWork.Appointments.GetByIdAsync(id, cancellationToken);
+        var appointment = await _unitOfWork.AppointmentRepository.GetByIdAsync(id, cancellationToken);
         if (appointment == null)
             return Response<AppointmentDto>.Fail($"Appointment {id} not found", 404);
 

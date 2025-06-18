@@ -9,7 +9,7 @@ public class UnitOfWork(AuthDbContext _context) : IUnitOfWork
     private IUserRepository? _userRepository;
     private IRoleRepository? _roleRepository;
     private IPermissionRepository? _permissionRepository;
-    public IUserRepository Users
+    public IUserRepository UserRepository
     {
         get
         {
@@ -18,7 +18,7 @@ public class UnitOfWork(AuthDbContext _context) : IUnitOfWork
         }
     }
 
-    public IRoleRepository Roles
+    public IRoleRepository RoleRepository
     {
         get
         {
@@ -27,7 +27,7 @@ public class UnitOfWork(AuthDbContext _context) : IUnitOfWork
         }
     }
 
-    public IPermissionRepository Permissions
+    public IPermissionRepository PermissionRepository
     {
         get
         {

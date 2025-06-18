@@ -7,7 +7,7 @@ public class UnitOfWork(AppointmentDbContext _context) : IUnitOfWork
 {
     private IAppointmentRepository? _appointmentRepository;
 
-    public IAppointmentRepository Appointments
+    public IAppointmentRepository AppointmentRepository
     {
         get
         {

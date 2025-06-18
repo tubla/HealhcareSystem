@@ -22,7 +22,7 @@ public class AppointmentController : ControllerBase
 
     [HttpPost]
     public async Task<ActionResult<Response<AppointmentDto>>> CreateAppointment(
-        [FromBody] AppointmentDto dto
+        [FromBody] CreateAppointmentDto dto
     )
     {
         var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");

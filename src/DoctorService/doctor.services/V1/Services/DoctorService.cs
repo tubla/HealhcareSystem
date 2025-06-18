@@ -22,12 +22,12 @@ public class DoctorService(IUnitOfWork _unitOfWork,
         if (!await _authServiceProxy.CheckPermissionAsync(userId, RbacPermissions.WriteDoctor, cancellationToken))
             return Response<DoctorDto>.Fail("Permission denied", 403);
 
-        var existingDoctor = await _unitOfWork.Doctors.GetByLicenseNumberAsync(dto.LicenseNumber, cancellationToken);
+        var existingDoctor = await _unitOfWork.DoctorRepository.GetByLicenseNumberAsync(dto.LicenseNumber, cancellationToken);
         if (existingDoctor != null)
             return Response<DoctorDto>.Fail("Doctor with this license number already exists", 409);
 
         var doctor = _mapper.Map<Doctor>(dto);
-        await _unitOfWork.Doctors.AddAsync(doctor, cancellationToken);
+        await _unitOfWork.DoctorRepository.AddAsync(doctor, cancellationToken);
         await _unitOfWork.CompleteAsync(cancellationToken);
 
         // Invalidate cache for this doctor if it exists
@@ -45,7 +45,7 @@ public class DoctorService(IUnitOfWork _unitOfWork,
         if (_memoryCache.TryGetValue(cacheKey, out DoctorDto? cachedDoctor))
             return Response<DoctorDto>.Ok(cachedDoctor!);
 
-        var doctor = await _unitOfWork.Doctors.GetByIdAsync(id, cancellationToken);
+        var doctor = await _unitOfWork.DoctorRepository.GetByIdAsync(id, cancellationToken);
         if (doctor == null)
             return Response<DoctorDto>.Fail($"Doctor {id} not found", 404);
 
@@ -63,11 +63,11 @@ public class DoctorService(IUnitOfWork _unitOfWork,
         if (!await _authServiceProxy.CheckPermissionAsync(userId, RbacPermissions.WriteDoctor, cancellationToken))
             return Response<DoctorDto>.Fail("Permission denied", 403);
 
-        var doctor = await _unitOfWork.Doctors.GetByIdAsync(id, cancellationToken);
+        var doctor = await _unitOfWork.DoctorRepository.GetByIdAsync(id, cancellationToken);
         if (doctor == null)
             return Response<DoctorDto>.Fail($"Doctor {id} not found", 404);
 
-        var existingDoctor = await _unitOfWork.Doctors.GetByLicenseNumberAsync(licenseNumber, cancellationToken);
+        var existingDoctor = await _unitOfWork.DoctorRepository.GetByLicenseNumberAsync(licenseNumber, cancellationToken);
         if (existingDoctor != null && existingDoctor.DoctorId != id)
             return Response<DoctorDto>.Fail("Another doctor with this license number exists", 409);
 
@@ -97,11 +97,11 @@ public class DoctorService(IUnitOfWork _unitOfWork,
         if (!await _authServiceProxy.CheckPermissionAsync(userId, RbacPermissions.WriteDoctor, cancellationToken))
             return Response<bool>.Fail("Permission denied", 403);
 
-        var doctor = await _unitOfWork.Doctors.GetByIdAsync(id, cancellationToken);
+        var doctor = await _unitOfWork.DoctorRepository.GetByIdAsync(id, cancellationToken);
         if (doctor == null)
             return Response<bool>.Fail($"Doctor {id} not found", 404);
 
-        await _unitOfWork.Doctors.DeleteAsync(id, cancellationToken);
+        await _unitOfWork.DoctorRepository.DeleteAsync(id, cancellationToken);
         await _unitOfWork.CompleteAsync(cancellationToken);
 
         // Invalidate cache for this doctor
@@ -115,7 +115,7 @@ public class DoctorService(IUnitOfWork _unitOfWork,
         if (!await _authServiceProxy.CheckPermissionAsync(userId, RbacPermissions.ReadAppointment, cancellationToken))
             return Response<IEnumerable<AppointmentDto>>.Fail("Permission denied", 403);
 
-        var doctor = await _unitOfWork.Doctors.GetByIdAsync(doctorId, cancellationToken);
+        var doctor = await _unitOfWork.DoctorRepository.GetByIdAsync(doctorId, cancellationToken);
         if (doctor == null)
             return Response<IEnumerable<AppointmentDto>>.Fail("Doctor not found", 404);
 

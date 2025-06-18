@@ -2,6 +2,6 @@
 
 public interface IUnitOfWork : IDisposable
 {
-    IAppointmentRepository Appointments { get; }
+    IAppointmentRepository AppointmentRepository { get; }
     Task<int> CompleteAsync(CancellationToken cancellationToken = default);
 }
