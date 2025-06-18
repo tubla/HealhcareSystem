@@ -2,7 +2,7 @@
 using Azure.Security.KeyVault.Secrets;
 using Microsoft.Extensions.Configuration.AzureAppConfiguration;
 
-namespace authentication.api.V1.Extensions;
+namespace doctor.api.V1.Extensions;
 
 public static class AppConfigurationExtension
 {

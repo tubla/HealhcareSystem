@@ -46,6 +46,16 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "FlywayMigrations", "FlywayM
 		src\FlywayMigrations\V02__SeedDataIntoHealthcareSchemas.sql = src\FlywayMigrations\V02__SeedDataIntoHealthcareSchemas.sql
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DoctorService", "DoctorService", "{FCC37E3E-7597-48CE-BCBC-7FE42DCBC051}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "doctor.api", "src\DoctorService\doctor.api\doctor.api.csproj", "{2F73F25E-F981-4BA9-8E1C-03D9935687D0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "doctor.models", "src\DoctorService\doctor.models\doctor.models.csproj", "{3382359D-F608-46E7-96CA-320C1DD1B234}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "doctor.repositories", "src\DoctorService\doctor.repositories\doctor.repositories.csproj", "{3663B987-D9BC-471E-8A4E-6093CB0FEA6E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "doctor.services", "src\DoctorService\doctor.services\doctor.services.csproj", "{D278C0F9-5B51-433A-B4D1-4B17CF4F7C0B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -92,6 +102,22 @@ Global
 		{DE76F0D1-BD40-4674-8CFC-DDC81FE94F52}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DE76F0D1-BD40-4674-8CFC-DDC81FE94F52}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DE76F0D1-BD40-4674-8CFC-DDC81FE94F52}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2F73F25E-F981-4BA9-8E1C-03D9935687D0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2F73F25E-F981-4BA9-8E1C-03D9935687D0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2F73F25E-F981-4BA9-8E1C-03D9935687D0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2F73F25E-F981-4BA9-8E1C-03D9935687D0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3382359D-F608-46E7-96CA-320C1DD1B234}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3382359D-F608-46E7-96CA-320C1DD1B234}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3382359D-F608-46E7-96CA-320C1DD1B234}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3382359D-F608-46E7-96CA-320C1DD1B234}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3663B987-D9BC-471E-8A4E-6093CB0FEA6E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3663B987-D9BC-471E-8A4E-6093CB0FEA6E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3663B987-D9BC-471E-8A4E-6093CB0FEA6E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3663B987-D9BC-471E-8A4E-6093CB0FEA6E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D278C0F9-5B51-433A-B4D1-4B17CF4F7C0B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D278C0F9-5B51-433A-B4D1-4B17CF4F7C0B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D278C0F9-5B51-433A-B4D1-4B17CF4F7C0B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D278C0F9-5B51-433A-B4D1-4B17CF4F7C0B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -112,6 +138,11 @@ Global
 		{AC463ACF-FAC8-4419-A551-ADCD154916BC} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{DE76F0D1-BD40-4674-8CFC-DDC81FE94F52} = {AC463ACF-FAC8-4419-A551-ADCD154916BC}
 		{A3328FDD-14B2-486E-8DE0-FA70480FB6A7} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{FCC37E3E-7597-48CE-BCBC-7FE42DCBC051} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{2F73F25E-F981-4BA9-8E1C-03D9935687D0} = {FCC37E3E-7597-48CE-BCBC-7FE42DCBC051}
+		{3382359D-F608-46E7-96CA-320C1DD1B234} = {FCC37E3E-7597-48CE-BCBC-7FE42DCBC051}
+		{3663B987-D9BC-471E-8A4E-6093CB0FEA6E} = {FCC37E3E-7597-48CE-BCBC-7FE42DCBC051}
+		{D278C0F9-5B51-433A-B4D1-4B17CF4F7C0B} = {FCC37E3E-7597-48CE-BCBC-7FE42DCBC051}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E891FCEC-5112-41F8-A782-0C0E08065396}

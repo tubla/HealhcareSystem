@@ -41,7 +41,7 @@ internal static class ServiceCollectionExtension
     {
         services.AddSwaggerGen(options =>
         {
-            options.SwaggerDoc("v1", new OpenApiInfo { Title = "Healthcare API", Version = "v1" });
+            options.SwaggerDoc("v1", new OpenApiInfo { Title = "Appointment API", Version = "v1" });
             options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
             {
                 Name = "Authorization",

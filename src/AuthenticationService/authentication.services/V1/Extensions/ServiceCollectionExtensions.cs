@@ -8,11 +8,10 @@ namespace authentication.services.V1.Extensions;
 
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddAuthServices(this IServiceCollection services)
+    public static void AddAuthServices(this IServiceCollection services)
     {
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IAuthService, AuthServiceImpl>();
-        return services;
     }
 }

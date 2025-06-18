@@ -1,6 +1,6 @@
-﻿using appointment.api.V1.Middlewares;
+﻿using doctor.api.V1.Middlewares;
 
-namespace appointment.api.V1.Extensions;
+namespace doctor.api.V1.Extensions;
 
 public static class MiddlewarePipelineExtension
 {

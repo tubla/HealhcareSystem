@@ -1,4 +1,4 @@
-﻿namespace appointment.services.V1.Contracts;
+﻿namespace shared.HelperClasses.Contracts;
 
 public interface IAuthServiceProxy
 {

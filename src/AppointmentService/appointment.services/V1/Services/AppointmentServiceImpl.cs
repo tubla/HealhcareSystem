@@ -8,6 +8,7 @@ using Azure.Messaging.EventHubs.Producer;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using shared.Events;
+using shared.HelperClasses.Contracts;
 using shared.Models;
 using System.Text;
 using System.Text.Json;

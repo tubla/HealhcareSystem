@@ -1,9 +1,10 @@
-﻿using authentication.api.V1.Filters;
-using authentication.models.V1.Context;
-using authentication.services.V1.Extensions;
-using authentication.services.V1.Mapping;
-using Azure.Identity;
+﻿using Azure.Identity;
 using Azure.Security.KeyVault.Secrets;
+using doctor.api.V1.Extensions;
+using doctor.api.V1.ModelBinders;
+using doctor.repositories.V1.Context;
+using doctor.services.V1.Extensions;
+using doctor.services.V1.Mapping;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Azure;
@@ -11,7 +12,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 
-namespace authentication.api.V1.Extensions;
+namespace doctor.api.V1.Extensions;
 
 internal static class ServiceCollectionExtension
 {
@@ -20,7 +21,7 @@ internal static class ServiceCollectionExtension
         ConfigurationManager configuration
     )
     {
-        services.AddControllers();
+        services.AddControllers(options => options.ModelBinderProviders.Insert(0, new ModelBinderProvider()));
         services.AddEndpointsApiExplorer();
         services.AddSwagerUi();
         services.AddAuthorization();
@@ -30,18 +31,18 @@ internal static class ServiceCollectionExtension
             clientBuilder.UseCredential(new DefaultAzureCredential());
         });
         AddAuthDbContext(services, configuration);
-
-        AddApiVersioning(services);
-        AddJwtAuthentication(services, configuration);
-        services.AddAutoMapper(typeof(AuthMappingProfile));
-        services.AddAuthServices();
+        services.AddApiVersioning();
+        services.AddJwtAuthentication(configuration);
+        services.AddAutoMapper(typeof(DoctorMappingProfile));
+        services.AddHttpClient();
+        services.AddDoctorServices();
     }
 
     private static void AddSwagerUi(this IServiceCollection services)
     {
         services.AddSwaggerGen(options =>
         {
-            options.SwaggerDoc("v1", new OpenApiInfo { Title = "Authentication API", Version = "v1" });
+            options.SwaggerDoc("v1", new OpenApiInfo { Title = "Doctor API", Version = "v1" });
             options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
             {
                 Name = "Authorization",
@@ -52,8 +53,20 @@ internal static class ServiceCollectionExtension
                 Description = "Enter 'Bearer {token}' below."
             });
 
-            // Apply security requirement selectively using the operation filter
-            options.OperationFilter<AuthorizeOperationFilter>();
+            options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new List<string>()
+        }
+    });
         });
     }
 
@@ -64,17 +77,13 @@ internal static class ServiceCollectionExtension
                 ?? "https://healthcare-vault.vault.azure.net/";
         var secretClient = new SecretClient(new Uri(keyVaultUri), new DefaultAzureCredential());
         var sqlConnectionString = secretClient.GetSecret("SqlConnection").Value.Value;
-        services.AddDbContext<AuthDbContext>(options =>
-                    options.UseSqlServer(sqlConnectionString, sql => sql.EnableRetryOnFailure(
-                                            maxRetryCount: 5,
-                                            maxRetryDelay: TimeSpan.FromSeconds(10),
-                                            errorNumbersToAdd: null
-                                        ))
-                           .UseSnakeCaseNamingConvention()
+        services.AddDbContext<DoctorDbContext>(options =>
+                    options.UseSqlServer(sqlConnectionString)
+                    .UseSnakeCaseNamingConvention()
                 );
 
         services.AddHealthChecks()
-        .AddDbContextCheck<AuthDbContext>(
+        .AddDbContextCheck<DoctorDbContext>(
         name: "sql-db",
         failureStatus: Microsoft.Extensions.Diagnostics.HealthChecks.HealthStatus.Unhealthy,
         tags: new[] { "db", "sql", "auth" }
