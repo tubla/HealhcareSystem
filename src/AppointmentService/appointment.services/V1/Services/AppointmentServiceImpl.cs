@@ -8,6 +8,7 @@ using Azure.Messaging.EventHubs.Producer;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using shared.Events;
+using shared.HelperClasses;
 using shared.HelperClasses.Contracts;
 using shared.Models;
 using System.Text;
@@ -32,7 +33,7 @@ public class AppointmentServiceImpl(
         if (dto == null)
             return Response<AppointmentDto>.Fail("Invalid appointment data");
 
-        if (!await _authServiceProxy.CheckPermissionAsync(userId, "WriteAppointment", cancellationToken))
+        if (!await _authServiceProxy.CheckPermissionAsync(userId, RbacPermissions.WriteAppointment, cancellationToken))
             return Response<AppointmentDto>.Fail("Permission denied", 403);
 
         if (dto.AppointmentDateTime < DateTime.UtcNow)
@@ -79,7 +80,7 @@ public class AppointmentServiceImpl(
         int userId,
         CancellationToken cancellationToken = default)
     {
-        if (!await _authServiceProxy.CheckPermissionAsync(userId, "ReadAppointment", cancellationToken))
+        if (!await _authServiceProxy.CheckPermissionAsync(userId, RbacPermissions.ReadAppointment, cancellationToken))
             return Response<AppointmentDto>.Fail("Permission denied", 403);
 
         var appointment = await _unitOfWork.Appointments.GetByIdAsync(id, cancellationToken);
@@ -94,7 +95,7 @@ public class AppointmentServiceImpl(
         int userId,
         CancellationToken cancellationToken = default)
     {
-        if (!await _authServiceProxy.CheckPermissionAsync(userId, "ReadAppointment", cancellationToken))
+        if (!await _authServiceProxy.CheckPermissionAsync(userId, RbacPermissions.ReadAppointment, cancellationToken))
             return Response<IEnumerable<AppointmentDto>>.Fail("Permission denied", 403);
 
         var cacheKey = $"doctor-appointments:{doctorId}";
@@ -131,7 +132,7 @@ public class AppointmentServiceImpl(
         int userId,
         CancellationToken cancellationToken = default)
     {
-        if (!await _authServiceProxy.CheckPermissionAsync(userId, "CancelAppointment", cancellationToken))
+        if (!await _authServiceProxy.CheckPermissionAsync(userId, RbacPermissions.WriteAppointment, cancellationToken))
             return Response<AppointmentDto>.Fail("Permission denied", 403);
 
         var appointment = await _unitOfWork.Appointments.GetByIdAsync(id, cancellationToken);
