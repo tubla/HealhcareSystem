@@ -216,4 +216,14 @@ public class DoctorService(IUnitOfWork _unitOfWork,
             return Response<IEnumerable<AppointmentDto>>.Fail($"Failed to retrieve appointments: {ex.Message}", 500);
         }
     }
+
+    public async Task<bool> CheckDepartmentAsignedAsync(int deptId, int userId, CancellationToken cancellationToken = default)
+    {
+        if (!await _authServiceProxy.CheckPermissionAsync(userId, RbacPermissions.ReadAppointment, cancellationToken))
+            throw new UnauthorizedAccessException("No access permission");
+
+        var doctor = await _unitOfWork.DoctorRepository.GetByDepartmentIdAsync(deptId, cancellationToken);
+        return doctor != null && doctor.Any();
+
+    }
 }

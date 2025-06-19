@@ -2,6 +2,8 @@
 
 public class RbacPermissions
 {
+    public const string ReadDepartment = "readdepartment";
+    public const string WriteDepartment = "writedepartment";
     public const string ReadDoctor = "readdoctor";
     public const string WriteDoctor = "writedoctor";
     public const string ReadPatient = "readpatient";

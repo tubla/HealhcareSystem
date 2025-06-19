@@ -52,4 +52,19 @@ public class DoctorsController(IDoctorService _doctorService) : ControllerBase
         var response = await _doctorService.GetAppointmentsAsync(id, userId, cancellationToken);
         return response.Success ? Ok(response) : StatusCode(response.StatusCode, response);
     }
+
+    [HttpPost("check-department-assigned")]
+    public async Task<ActionResult<bool>> CheckDepartmentAsigned(
+            [FromBody] DepartmentCheckRequestDto request,
+            CancellationToken cancellationToken = default
+        )
+    {
+        var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+        var result = await _doctorService.CheckDepartmentAsignedAsync(
+            request.DeptId,
+            userId,
+            cancellationToken
+        );
+        return Ok(result);
+    }
 }

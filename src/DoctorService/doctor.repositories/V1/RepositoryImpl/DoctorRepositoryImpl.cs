@@ -13,6 +13,12 @@ public class DoctorRepositoryImpl(DoctorDbContext _context) : IDoctorRepository
             .FirstOrDefaultAsync(d => d.DoctorId == id, cancellationToken);
     }
 
+    public async Task<IEnumerable<Doctor>?> GetByDepartmentIdAsync(int deptId, CancellationToken cancellationToken = default)
+    {
+        return await _context.Doctors
+            .Where(d => d.DeptId == deptId).ToListAsync(cancellationToken);
+    }
+
     public async Task<Doctor?> GetByUserIdAsync(int userId, CancellationToken cancellationToken = default)
     {
         return await _context.Doctors

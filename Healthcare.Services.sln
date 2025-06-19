@@ -66,6 +66,16 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "patient.repositories", "src
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "patient.services", "src\PatientService\patient.services\patient.services.csproj", "{98283F84-94DD-4A82-B367-239FC39F0B69}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DepartmentService", "DepartmentService", "{2ABF6EAA-A221-43A8-A3D7-CAE2D3AEE5EA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "department.api", "src\DepartmentService\department.api\department.api.csproj", "{D1363888-5FBA-4499-B846-A10B3003490B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "department.models", "src\DepartmentService\department.models\department.models.csproj", "{81E65BAB-7A29-4831-B74E-41C984A95A1A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "department.repositories", "src\DepartmentService\department.repositories\department.repositories.csproj", "{4B3D54D8-2AD8-4F17-BB55-B93545CF9A34}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "department.services", "src\DepartmentService\department.services\department.services.csproj", "{455709EC-E9BC-43F8-9B91-ECB0C07902E0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -144,6 +154,22 @@ Global
 		{98283F84-94DD-4A82-B367-239FC39F0B69}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{98283F84-94DD-4A82-B367-239FC39F0B69}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{98283F84-94DD-4A82-B367-239FC39F0B69}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D1363888-5FBA-4499-B846-A10B3003490B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D1363888-5FBA-4499-B846-A10B3003490B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D1363888-5FBA-4499-B846-A10B3003490B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D1363888-5FBA-4499-B846-A10B3003490B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{81E65BAB-7A29-4831-B74E-41C984A95A1A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{81E65BAB-7A29-4831-B74E-41C984A95A1A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{81E65BAB-7A29-4831-B74E-41C984A95A1A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{81E65BAB-7A29-4831-B74E-41C984A95A1A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4B3D54D8-2AD8-4F17-BB55-B93545CF9A34}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4B3D54D8-2AD8-4F17-BB55-B93545CF9A34}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4B3D54D8-2AD8-4F17-BB55-B93545CF9A34}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4B3D54D8-2AD8-4F17-BB55-B93545CF9A34}.Release|Any CPU.Build.0 = Release|Any CPU
+		{455709EC-E9BC-43F8-9B91-ECB0C07902E0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{455709EC-E9BC-43F8-9B91-ECB0C07902E0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{455709EC-E9BC-43F8-9B91-ECB0C07902E0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{455709EC-E9BC-43F8-9B91-ECB0C07902E0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -174,6 +200,11 @@ Global
 		{F22CBB21-9744-431E-BD3A-A9DBE170421A} = {580EFD48-6979-400F-ABBD-AB8E96975C32}
 		{7F712285-AA0A-447F-A1A3-286DF1C1B269} = {580EFD48-6979-400F-ABBD-AB8E96975C32}
 		{98283F84-94DD-4A82-B367-239FC39F0B69} = {580EFD48-6979-400F-ABBD-AB8E96975C32}
+		{2ABF6EAA-A221-43A8-A3D7-CAE2D3AEE5EA} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{D1363888-5FBA-4499-B846-A10B3003490B} = {2ABF6EAA-A221-43A8-A3D7-CAE2D3AEE5EA}
+		{81E65BAB-7A29-4831-B74E-41C984A95A1A} = {2ABF6EAA-A221-43A8-A3D7-CAE2D3AEE5EA}
+		{4B3D54D8-2AD8-4F17-BB55-B93545CF9A34} = {2ABF6EAA-A221-43A8-A3D7-CAE2D3AEE5EA}
+		{455709EC-E9BC-43F8-9B91-ECB0C07902E0} = {2ABF6EAA-A221-43A8-A3D7-CAE2D3AEE5EA}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E891FCEC-5112-41F8-A782-0C0E08065396}
