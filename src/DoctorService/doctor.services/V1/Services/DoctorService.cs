@@ -11,20 +11,52 @@ using shared.Models;
 namespace doctor.services.V1.Services;
 
 public class DoctorService(IUnitOfWork _unitOfWork,
+    IDepartmentServiceProxy _departmentServiceProxy,
     IAppointmentServiceProxy _appointmentServiceProxy,
-    IMemoryCache _memoryCache,
     IAuthServiceProxy _authServiceProxy,
+    IMemoryCache _memoryCache,
     IMapper _mapper) : IDoctorService
 {
-    private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(5);
+    private static readonly TimeSpan _cacheDuration = TimeSpan.FromMinutes(5);
     public async Task<Response<DoctorDto>> CreateAsync(CreateDoctorDto dto, int userId, CancellationToken cancellationToken = default)
     {
         if (!await _authServiceProxy.CheckPermissionAsync(userId, RbacPermissions.WriteDoctor, cancellationToken))
             return Response<DoctorDto>.Fail("Permission denied", 403);
 
+        var department = await _departmentServiceProxy.GetDepartmentAsync(dto.DeptId, cancellationToken);
+        if (department == null)
+            return Response<DoctorDto>.Fail($"Department with ID {dto.DeptId} not found", 404);
+
+        if (dto.UserId.HasValue)
+        {
+            try
+            {
+                if (!await _authServiceProxy.CheckUserExistsAsync(dto.UserId.Value, cancellationToken))
+                {
+                    return Response<DoctorDto>.Fail("User not found", 404);
+                }
+            }
+            catch
+            {
+                return Response<DoctorDto>.Fail("User not found", 404);
+            }
+
+            // Check if the user is already associated with another doctor
+            var existingDoctorByUser = await _unitOfWork.DoctorRepository.GetByUserIdAsync(dto.UserId.Value, cancellationToken);
+            if (existingDoctorByUser != null)
+                return Response<DoctorDto>.Fail("User is already associated with another doctor", 409);
+        }
+
+
+
+
         var existingDoctor = await _unitOfWork.DoctorRepository.GetByLicenseNumberAsync(dto.LicenseNumber, cancellationToken);
         if (existingDoctor != null)
             return Response<DoctorDto>.Fail("Doctor with this license number already exists", 409);
+
+        var existingDoctorByEmail = await _unitOfWork.DoctorRepository.GetByEmailAsync(dto.Email, cancellationToken);
+        if (existingDoctorByEmail != null)
+            return Response<DoctorDto>.Fail("Doctor with this email already exists", 409);
 
         var doctor = _mapper.Map<Doctor>(dto);
         await _unitOfWork.DoctorRepository.AddAsync(doctor, cancellationToken);
@@ -52,13 +84,13 @@ public class DoctorService(IUnitOfWork _unitOfWork,
         var doctorDto = _mapper.Map<DoctorDto>(doctor);
         _memoryCache.Set(cacheKey, doctorDto, new MemoryCacheEntryOptions
         {
-            AbsoluteExpirationRelativeToNow = CacheDuration
+            AbsoluteExpirationRelativeToNow = _cacheDuration
         });
 
         return Response<DoctorDto>.Ok(doctorDto);
     }
 
-    public async Task<Response<DoctorDto>> UpdateAsync(int id, string licenseNumber, int userId, UpdateDoctorDto dto, CancellationToken cancellationToken = default)
+    public async Task<Response<DoctorDto>> UpdateAsync(int id, int userId, UpdateDoctorDto dto, CancellationToken cancellationToken = default)
     {
         if (!await _authServiceProxy.CheckPermissionAsync(userId, RbacPermissions.WriteDoctor, cancellationToken))
             return Response<DoctorDto>.Fail("Permission denied", 403);
@@ -67,22 +99,69 @@ public class DoctorService(IUnitOfWork _unitOfWork,
         if (doctor == null)
             return Response<DoctorDto>.Fail($"Doctor {id} not found", 404);
 
-        var existingDoctor = await _unitOfWork.DoctorRepository.GetByLicenseNumberAsync(licenseNumber, cancellationToken);
-        if (existingDoctor != null && existingDoctor.DoctorId != id)
-            return Response<DoctorDto>.Fail("Another doctor with this license number exists", 409);
+        if (dto.IsLicenseNumberSet && !string.IsNullOrWhiteSpace(dto.LicenseNumber))
+        {
+            var existingDoctor = await _unitOfWork.DoctorRepository.GetByLicenseNumberAsync(dto.LicenseNumber, cancellationToken);
+            if (existingDoctor != null && existingDoctor.DoctorId != id)
+                return Response<DoctorDto>.Fail("Another doctor with this license number exists", 409);
 
-        if (dto.IsFirstNameSet && !string.IsNullOrWhiteSpace(dto.FirstName))
-            doctor.FirstName = dto.FirstName;
-        if (dto.IsLastNameSet && !string.IsNullOrWhiteSpace(dto.LastName))
-            doctor.LastName = dto.LastName;
+            doctor.LicenseNumber = dto.LicenseNumber;
+        }
+
+        if (dto.IsDeptIdSet && dto.DeptId.HasValue && dto.DeptId.Value > 0)
+        {
+            var department = await _departmentServiceProxy.GetDepartmentAsync(dto.DeptId.Value, cancellationToken);
+            if (department == null)
+                return Response<DoctorDto>.Fail($"Department with ID {dto.DeptId} not found", 404);
+
+            doctor.DeptId = dto.DeptId.Value;
+        }
+
+        if (dto.IsUserIdSet && dto.UserId.HasValue)
+        {
+            try
+            {
+                if (!await _authServiceProxy.CheckUserExistsAsync(dto.UserId.Value, cancellationToken))
+                {
+                    return Response<DoctorDto>.Fail("User not found", 404);
+                }
+            }
+            catch
+            {
+                return Response<DoctorDto>.Fail("User not found", 404);
+            }
+
+            // Check if the user is already associated with another doctor
+            var existingDoctorByUser = await _unitOfWork.DoctorRepository.GetByUserIdAsync(dto.UserId.Value, cancellationToken);
+            if (existingDoctorByUser != null)
+                return Response<DoctorDto>.Fail("User is already associated with another doctor", 409);
+
+            doctor.UserId = dto.UserId.Value;
+        }
+
+        if (dto.IsEmailSet && !string.IsNullOrWhiteSpace(dto.Email))
+        {
+            var existingDoctorByEmail = await _unitOfWork.DoctorRepository.GetByEmailAsync(dto.Email, cancellationToken);
+            if (existingDoctorByEmail != null && existingDoctorByEmail.DoctorId != id)
+                return Response<DoctorDto>.Fail("Another doctor with this email exists", 409);
+
+            doctor.Email = dto.Email;
+        }
+
+        if (dto.IsPhoneSet && !string.IsNullOrWhiteSpace(dto.Phone))
+        {
+            var existingDoctorByPhone = await _unitOfWork.DoctorRepository.GetByPhoneAsync(dto.Phone, cancellationToken);
+            if (existingDoctorByPhone != null && existingDoctorByPhone.DoctorId != id)
+                return Response<DoctorDto>.Fail("Another doctor with this phone number exists", 409);
+
+            doctor.Phone = dto.Phone;
+        }
+
+
+        if (dto.IsNameSet && !string.IsNullOrWhiteSpace(dto.Name))
+            doctor.Name = dto.Name;
         if (dto.IsSpecializationSet && !string.IsNullOrWhiteSpace(dto.Specialization))
             doctor.Specialization = dto.Specialization;
-        if (dto.IsContactNumberSet && !string.IsNullOrWhiteSpace(dto.ContactNumber))
-            doctor.ContactNumber = dto.ContactNumber;
-        if (dto.IsEmailSet && !string.IsNullOrWhiteSpace(dto.Email))
-            doctor.Email = dto.Email;
-        if (dto.IsHospitalAffiliationSet && !string.IsNullOrWhiteSpace(dto.HospitalAffiliation))
-            doctor.HospitalAffiliation = dto.HospitalAffiliation;
 
         await _unitOfWork.CompleteAsync(cancellationToken);
 
@@ -128,7 +207,7 @@ public class DoctorService(IUnitOfWork _unitOfWork,
             var data = await _appointmentServiceProxy.GetAppointmentsAsync(doctorId, cancellationToken);
             _memoryCache.Set(cacheKey, data, new MemoryCacheEntryOptions
             {
-                AbsoluteExpirationRelativeToNow = CacheDuration
+                AbsoluteExpirationRelativeToNow = _cacheDuration
             });
             return Response<IEnumerable<AppointmentDto>>.Ok(data);
         }

@@ -4,45 +4,52 @@ namespace patient.models.V1.Dto;
 
 public class UpdatePatientDto
 {
-    [JsonPropertyName("first_name")]
-    public string? FirstName { get; set; }
+    [JsonPropertyName("name")]
+    public string Name { get; set; } = string.Empty;
 
-    [JsonPropertyName("last_name")]
-    public string? LastName { get; set; }
-
-    [JsonPropertyName("date_of_birth")]
-    public DateTime? DateOfBirth { get; set; }
+    [JsonPropertyName("dob")]
+    public DateTime Dob { get; set; }
 
     [JsonPropertyName("gender")]
-    public string? Gender { get; set; }
-
-    [JsonPropertyName("contact_number")]
-    public string? ContactNumber { get; set; }
+    public string Gender { get; set; } = string.Empty;
 
     [JsonPropertyName("email")]
-    public string? Email { get; set; }
+    public string Email { get; set; } = string.Empty;
+
+    [JsonPropertyName("phone")]
+    public string Phone { get; set; } = string.Empty;
 
     [JsonPropertyName("address")]
-    public string? Address { get; set; }
+    public string Address { get; set; } = string.Empty;
+
+    [JsonPropertyName("insurance_provider_id")]
+    public int? InsuranceProviderId { get; set; }
+
+    [JsonPropertyName("user_id")]
+    public int? UserId { get; set; }
+
 
     [JsonIgnore]
-    public bool IsFirstNameSet { get; set; }
+    public bool IsNameSet { get; set; }
 
     [JsonIgnore]
-    public bool IsLastNameSet { get; set; }
-
-    [JsonIgnore]
-    public bool IsDateOfBirthSet { get; set; }
+    public bool IsDobSet { get; set; }
 
     [JsonIgnore]
     public bool IsGenderSet { get; set; }
 
     [JsonIgnore]
-    public bool IsContactNumberSet { get; set; }
-
-    [JsonIgnore]
     public bool IsEmailSet { get; set; }
 
     [JsonIgnore]
+    public bool IsPhoneSet { get; set; }
+
+    [JsonIgnore]
     public bool IsAddressSet { get; set; }
+
+    [JsonIgnore]
+    public bool IsInsuranceProviderIdSet { get; set; }
+
+    [JsonIgnore]
+    public bool IsUserIdSet { get; set; }
 }

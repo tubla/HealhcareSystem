@@ -13,20 +13,20 @@ public class DoctorDbContext(DbContextOptions<DoctorDbContext> _options) : DbCon
 
         modelBuilder.Entity<Doctor>(entity =>
         {
-            entity.ToTable("doctors", t => t.HasComment("Stores doctor information"));
+            entity.ToTable("doctor", "healthcare", t => t.HasComment("Stores doctor information"));
             entity.HasKey(e => e.DoctorId);
 
             entity.Property(e => e.DoctorId)
                 .HasColumnName("doctor_id")
                 .ValueGeneratedOnAdd();
 
-            entity.Property(e => e.FirstName)
-                .HasColumnName("first_name")
-                .HasMaxLength(50)
+            entity.Property(e => e.Name)
+                .HasColumnName("name")
+                .HasMaxLength(100)
                 .IsRequired();
 
-            entity.Property(e => e.LastName)
-                .HasColumnName("last_name")
+            entity.Property(e => e.LicenseNumber)
+                .HasColumnName("license_number")
                 .HasMaxLength(50)
                 .IsRequired();
 
@@ -35,26 +35,28 @@ public class DoctorDbContext(DbContextOptions<DoctorDbContext> _options) : DbCon
                 .HasMaxLength(100)
                 .IsRequired();
 
-            entity.Property(e => e.LicenseNumber)
-                .HasColumnName("license_number")
-                .HasMaxLength(20)
-                .IsRequired();
-
-            entity.Property(e => e.ContactNumber)
-                .HasColumnName("contact_number")
-                .HasMaxLength(15);
-
             entity.Property(e => e.Email)
                 .HasColumnName("email")
-                .HasMaxLength(100);
+                .HasMaxLength(100)
+                .IsRequired();
 
-            entity.Property(e => e.HospitalAffiliation)
-                .HasColumnName("hospital_affiliation")
-                .HasMaxLength(100);
+            entity.Property(e => e.Phone)
+                .HasColumnName("phone")
+                .HasMaxLength(10)
+                .IsRequired();
+
+            entity.Property(e => e.DeptId)
+                .HasColumnName("dept_id")
+                .IsRequired();
+
+            entity.Property(e => e.UserId)
+                .HasColumnName("user_id");
 
             entity.HasIndex(e => e.LicenseNumber)
                 .IsUnique();
             entity.HasIndex(e => e.Email)
+                .IsUnique();
+            entity.HasIndex(e => e.UserId)
                 .IsUnique();
         });
     }

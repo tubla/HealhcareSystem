@@ -17,6 +17,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IDoctorService, DoctorService>();
         services.AddScoped<IAuthServiceProxy, AuthServiceProxy>();
         services.AddScoped<IAppointmentServiceProxy, AppointmentServiceProxy>();
+        services.AddScoped<IDepartmentServiceProxy, DepartmentServiceProxy>();
         services.AddScoped<IHttpClientService, HttpClientService>();
         services.AddMemoryCache();
     }

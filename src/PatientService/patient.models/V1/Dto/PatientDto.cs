@@ -7,24 +7,27 @@ public class PatientDto
     [JsonPropertyName("patient_id")]
     public int PatientId { get; set; }
 
-    [JsonPropertyName("first_name")]
-    public string FirstName { get; set; } = string.Empty;
+    [JsonPropertyName("name")]
+    public string Name { get; set; } = string.Empty;
 
-    [JsonPropertyName("last_name")]
-    public string LastName { get; set; } = string.Empty;
-
-    [JsonPropertyName("date_of_birth")]
-    public DateTime DateOfBirth { get; set; }
+    [JsonPropertyName("dob")]
+    public DateTime Dob { get; set; }
 
     [JsonPropertyName("gender")]
     public string Gender { get; set; } = string.Empty;
 
-    [JsonPropertyName("contact_number")]
-    public string ContactNumber { get; set; } = string.Empty;
-
     [JsonPropertyName("email")]
     public string Email { get; set; } = string.Empty;
 
+    [JsonPropertyName("phone")]
+    public string Phone { get; set; } = string.Empty;
+
     [JsonPropertyName("address")]
     public string Address { get; set; } = string.Empty;
+
+    [JsonPropertyName("insurance_provider_id")]
+    public int? InsuranceProviderId { get; set; }
+
+    [JsonPropertyName("user_id")]
+    public int? UserId { get; set; }
 }

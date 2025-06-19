@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace doctor.models.V1.Db;
 
-[Table("doctors")]
+[Table("doctor")]
 public class Doctor
 {
     [Key]
@@ -11,14 +11,14 @@ public class Doctor
     public int DoctorId { get; set; }
 
     [Required]
-    [Column("first_name")]
-    [StringLength(50)]
-    public string FirstName { get; set; } = string.Empty;
+    [Column("name")]
+    [StringLength(100)]
+    public string Name { get; set; } = string.Empty;
 
     [Required]
-    [Column("last_name")]
+    [Column("license_number")]
     [StringLength(50)]
-    public string LastName { get; set; } = string.Empty;
+    public string LicenseNumber { get; set; } = string.Empty;
 
     [Required]
     [Column("specialization")]
@@ -26,19 +26,19 @@ public class Doctor
     public string Specialization { get; set; } = string.Empty;
 
     [Required]
-    [Column("license_number")]
-    [StringLength(20)]
-    public string LicenseNumber { get; set; } = string.Empty;
-
-    [Column("contact_number")]
-    [StringLength(15)]
-    public string ContactNumber { get; set; } = string.Empty;
-
     [Column("email")]
     [StringLength(100)]
     public string Email { get; set; } = string.Empty;
 
-    [Column("hospital_affiliation")]
-    [StringLength(100)]
-    public string HospitalAffiliation { get; set; } = string.Empty;
+    [Required]
+    [Column("phone")]
+    [StringLength(10)]
+    public string Phone { get; set; } = string.Empty;
+
+    [Required]
+    [Column("dept_id")]
+    public int DeptId { get; set; }
+
+    [Column("user_id")]
+    public int? UserId { get; set; }
 }

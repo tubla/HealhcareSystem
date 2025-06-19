@@ -28,12 +28,13 @@ internal class UpdateDoctorDtoModelBinder : IModelBinder
 
         if (dto != null)
         {
-            dto.IsFirstNameSet = body.Contains("\"first_name\"");
-            dto.IsLastNameSet = body.Contains("\"last_name\"");
+            dto.IsNameSet = body.Contains("\"name\"");
+            dto.IsLicenseNumberSet = body.Contains("\"license_number\"");
             dto.IsSpecializationSet = body.Contains("\"specialization\"");
-            dto.IsContactNumberSet = body.Contains("\"contact_number\"");
+            dto.IsPhoneSet = body.Contains("\"phone\"");
             dto.IsEmailSet = body.Contains("\"email\"");
-            dto.IsHospitalAffiliationSet = body.Contains("\"hospital_affiliation\"");
+            dto.IsDeptIdSet = body.Contains("\"dept_id\"");
+            dto.IsUserIdSet = body.Contains("\"user_id\"");
             bindingContext.Result = ModelBindingResult.Success(dto);
         }
         else

@@ -13,6 +13,24 @@ public class DoctorRepositoryImpl(DoctorDbContext _context) : IDoctorRepository
             .FirstOrDefaultAsync(d => d.DoctorId == id, cancellationToken);
     }
 
+    public async Task<Doctor?> GetByUserIdAsync(int userId, CancellationToken cancellationToken = default)
+    {
+        return await _context.Doctors
+            .FirstOrDefaultAsync(d => d.UserId == userId, cancellationToken);
+    }
+
+    public async Task<Doctor?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
+    {
+        return await _context.Doctors
+            .FirstOrDefaultAsync(d => d.Email == email, cancellationToken);
+    }
+
+    public async Task<Doctor?> GetByPhoneAsync(string phone, CancellationToken cancellationToken = default)
+    {
+        return await _context.Doctors
+            .FirstOrDefaultAsync(d => d.Phone == phone, cancellationToken);
+    }
+
     public async Task<Doctor?> GetByLicenseNumberAsync(string licenseNumber, CancellationToken cancellationToken = default)
     {
         return await _context.Doctors

@@ -19,6 +19,18 @@ public class PatientRepositoryImpl(PatientDbContext _context) : IPatientReposito
             .FirstOrDefaultAsync(p => p.Email == email, cancellationToken);
     }
 
+    public async Task<Patient?> GetByPhoneAsync(string phone, CancellationToken cancellationToken = default)
+    {
+        return await _context.Patients
+            .FirstOrDefaultAsync(p => p.Phone == phone, cancellationToken);
+    }
+
+    public async Task<Patient?> GetByUserIdAsync(int userId, CancellationToken cancellationToken = default)
+    {
+        return await _context.Patients
+            .FirstOrDefaultAsync(p => p.UserId == userId, cancellationToken);
+    }
+
     public async Task AddAsync(Patient patient, CancellationToken cancellationToken = default)
     {
         await _context.Patients.AddAsync(patient, cancellationToken);

@@ -13,45 +13,50 @@ public class PatientDbContext(DbContextOptions<PatientDbContext> options) : DbCo
 
         modelBuilder.Entity<Patient>(entity =>
         {
-            entity.ToTable("patients", t => t.HasComment("Stores patient information"));
+            entity.ToTable("patient", "healthcare", t => t.HasComment("Stores patient information"));
             entity.HasKey(e => e.PatientId);
 
             entity.Property(e => e.PatientId)
                 .HasColumnName("patient_id")
                 .ValueGeneratedOnAdd();
 
-            entity.Property(e => e.FirstName)
-                .HasColumnName("first_name")
-                .HasMaxLength(50)
+            entity.Property(e => e.Name)
+                .HasColumnName("name")
+                .HasMaxLength(100)
                 .IsRequired();
 
-            entity.Property(e => e.LastName)
-                .HasColumnName("last_name")
-                .HasMaxLength(50)
-                .IsRequired();
-
-            entity.Property(e => e.DateOfBirth)
-                .HasColumnName("date_of_birth")
+            entity.Property(e => e.Dob)
+                .HasColumnName("dob")
                 .IsRequired();
 
             entity.Property(e => e.Gender)
                 .HasColumnName("gender")
-                .HasMaxLength(10)
+                .HasMaxLength(1)
                 .IsRequired();
-
-            entity.Property(e => e.ContactNumber)
-                .HasColumnName("contact_number")
-                .HasMaxLength(15);
 
             entity.Property(e => e.Email)
                 .HasColumnName("email")
-                .HasMaxLength(100);
+                .HasMaxLength(100)
+                .IsRequired();
+
+            entity.Property(e => e.Phone)
+                .HasColumnName("phone")
+                .HasMaxLength(10)
+                .IsRequired();
 
             entity.Property(e => e.Address)
                 .HasColumnName("address")
-                .HasMaxLength(200);
+                .HasMaxLength(300);
+
+            entity.Property(e => e.InsuranceProviderId)
+                .HasColumnName("insurance_provider_id");
+
+            entity.Property(e => e.UserId)
+                .HasColumnName("user_id");
 
             entity.HasIndex(e => e.Email)
+                .IsUnique();
+            entity.HasIndex(e => e.UserId)
                 .IsUnique();
         });
     }

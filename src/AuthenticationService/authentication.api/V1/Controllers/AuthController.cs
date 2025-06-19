@@ -49,5 +49,19 @@ namespace authentication.api.V1.Controllers
             );
             return Ok(result);
         }
+
+        [HttpPost("check-user-exists")]
+        [Authorize]
+        public async Task<ActionResult<bool>> CheckUserExists(
+            [FromBody] UserCheckRequestDto request,
+            CancellationToken cancellationToken = default
+        )
+        {
+            var result = await _authService.CheckUserExistsAsync(
+                request.UserId,
+                cancellationToken
+            );
+            return Ok(result);
+        }
     }
 }

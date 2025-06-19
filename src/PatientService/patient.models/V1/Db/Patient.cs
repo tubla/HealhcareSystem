@@ -11,33 +11,36 @@ public class Patient
     public int PatientId { get; set; }
 
     [Required]
-    [Column("first_name")]
-    [StringLength(50)]
-    public string FirstName { get; set; } = string.Empty;
+    [Column("name")]
+    [StringLength(100)]
+    public string Name { get; set; } = string.Empty;
 
     [Required]
-    [Column("last_name")]
-    [StringLength(50)]
-    public string LastName { get; set; } = string.Empty;
-
-    [Required]
-    [Column("date_of_birth")]
-    public DateTime DateOfBirth { get; set; }
+    [Column("dob")]
+    public DateTime Dob { get; set; }
 
     [Required]
     [Column("gender")]
     [StringLength(1)]
     public string Gender { get; set; } = string.Empty;
 
-    [Column("contact_number")]
-    [StringLength(10)]
-    public string ContactNumber { get; set; } = string.Empty;
-
+    [Required]
     [Column("email")]
     [StringLength(100)]
     public string Email { get; set; } = string.Empty;
 
+    [Required]
+    [Column("phone")]
+    [StringLength(10)]
+    public string Phone { get; set; } = string.Empty;
+
     [Column("address")]
-    [StringLength(200)]
+    [StringLength(300)]
     public string Address { get; set; } = string.Empty;
+
+    [Column("insurance_provider_id")]
+    public int? InsuranceProviderId { get; set; }
+
+    [Column("user_id")]
+    public int? UserId { get; set; }
 }

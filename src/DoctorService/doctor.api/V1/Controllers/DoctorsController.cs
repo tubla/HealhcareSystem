@@ -30,10 +30,10 @@ public class DoctorsController(IDoctorService _doctorService) : ControllerBase
     }
 
     [HttpPut]
-    public async Task<ActionResult<Response<DoctorDto>>> Update(int id, string licenseNumber, [FromBody] UpdateDoctorDto dto, CancellationToken cancellationToken = default)
+    public async Task<ActionResult<Response<DoctorDto>>> Update(int id, [FromBody] UpdateDoctorDto dto, CancellationToken cancellationToken = default)
     {
         var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
-        var response = await _doctorService.UpdateAsync(id, licenseNumber, userId, dto, cancellationToken);
+        var response = await _doctorService.UpdateAsync(id, userId, dto, cancellationToken);
         return response.Success ? Ok(response) : StatusCode(response.StatusCode, response);
     }
 

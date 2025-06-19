@@ -91,13 +91,16 @@ public class AuthServiceImpl(
         return Response<LoginResponseDto>.Ok(response);
     }
 
+    // This method will also be called from other services to check permissions
     public async Task<bool> CheckPermissionAsync(int userId, string permissionName, CancellationToken cancellationToken = default)
     {
-        var hasPermission = await _unitOfWork.UserRepository.HasPermissionAsync(userId, permissionName, cancellationToken);
-        if (!hasPermission)
-            throw new CustomExceptions.UnauthorizedAccessException($"User {userId} lacks permission {permissionName}");
+        return await _unitOfWork.UserRepository.HasPermissionAsync(userId, permissionName, cancellationToken);
+    }
 
-        return true;
+    // This method will also be called from other services to check user existence
+    public async Task<bool> CheckUserExistsAsync(int userId, CancellationToken cancellationToken = default)
+    {
+        return await _unitOfWork.UserRepository.GetByIdAsync(userId, cancellationToken) != null;
     }
 
     private async Task<string> GenerateJwtTokenAsync(User user, CancellationToken cancellationToken = default)
