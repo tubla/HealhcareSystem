@@ -7,7 +7,7 @@ using System.Text.Json;
 
 namespace doctor.services.V1.Services;
 
-internal class AppointmentServiceProxy(IHttpClientService _httpClientService, IHttpContextAccessor _httpContextAccessor) : IAppointmentServiceProxy
+internal class AppointmentServiceProxyInternal(IHttpClientService _httpClientService, IHttpContextAccessor _httpContextAccessor) : IAppointmentServiceProxyInternal
 {
     public async Task<IEnumerable<AppointmentDto>> GetAppointmentsAsync(int patientId, CancellationToken cancellationToken = default)
     {

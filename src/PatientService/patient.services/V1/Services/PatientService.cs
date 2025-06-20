@@ -13,7 +13,7 @@ namespace patient.services.V1.Services;
 public class PatientService(
             IUnitOfWork _unitOfWork,
             IMapper _mapper,
-            IAppointmentServiceProxy _appointmentServiceProxy,
+            IAppointmentServiceProxyInternal _appointmentServiceProxyInternal,
             IInsuranceServiceProxy _insuranceServiceProxy,
             IAuthServiceProxy _authServiceProxy,
             IMemoryCache _memoryCache) : IPatientService
@@ -225,7 +225,7 @@ public class PatientService(
 
         try
         {
-            var data = await _appointmentServiceProxy.GetAppointmentsAsync(patientId, cancellationToken);
+            var data = await _appointmentServiceProxyInternal.GetAppointmentsAsync(patientId, cancellationToken);
 
             _memoryCache.Set(cacheKey, data, new MemoryCacheEntryOptions
             {

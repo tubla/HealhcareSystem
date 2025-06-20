@@ -23,6 +23,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IMedicationServiceProxy, MedicationServiceProxy>();
         services.AddScoped<IHttpClientService, HttpClientService>();
         services.AddMemoryCache();
+        services.AddHttpContextAccessor();
         services.AddSingleton(sp =>
         {
             var connectionString = configuration["EventHubConnection"];

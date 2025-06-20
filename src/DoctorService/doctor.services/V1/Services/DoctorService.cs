@@ -12,7 +12,7 @@ namespace doctor.services.V1.Services;
 
 public class DoctorService(IUnitOfWork _unitOfWork,
     IDepartmentServiceProxy _departmentServiceProxy,
-    IAppointmentServiceProxy _appointmentServiceProxy,
+    IAppointmentServiceProxyInternal _appointmentServiceProxyInternal,
     IAuthServiceProxy _authServiceProxy,
     IMemoryCache _memoryCache,
     IMapper _mapper) : IDoctorService
@@ -204,7 +204,7 @@ public class DoctorService(IUnitOfWork _unitOfWork,
 
         try
         {
-            var data = await _appointmentServiceProxy.GetAppointmentsAsync(doctorId, cancellationToken);
+            var data = await _appointmentServiceProxyInternal.GetAppointmentsAsync(doctorId, cancellationToken);
             _memoryCache.Set(cacheKey, data, new MemoryCacheEntryOptions
             {
                 AbsoluteExpirationRelativeToNow = _cacheDuration

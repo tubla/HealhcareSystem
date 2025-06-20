@@ -20,6 +20,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IAuthServiceProxy, AuthServiceProxy>();
         services.AddScoped<IHttpClientService, HttpClientService>();
         services.AddMemoryCache();
+        services.AddHttpContextAccessor();
         services.AddSingleton(sp =>
         {
             var connectionString = configuration["EventHubConnection"];

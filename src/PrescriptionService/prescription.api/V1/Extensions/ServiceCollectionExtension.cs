@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Azure;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using prescription.api.V1.ModelBinders;
 using prescription.repositories.V1.Context;
 using prescription.services.V1.Extensions;
 using prescription.services.V1.Mappings;
@@ -19,7 +20,7 @@ internal static class ServiceCollectionExtension
         ConfigurationManager configuration
     )
     {
-        services.AddControllers();
+        services.AddControllers(options => options.ModelBinderProviders.Insert(0, new ModelBinderProvider()));
         services.AddEndpointsApiExplorer();
         services.AddSwagerUi();
         services.AddAuthorization();
