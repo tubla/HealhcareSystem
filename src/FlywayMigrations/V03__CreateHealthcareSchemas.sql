@@ -11,7 +11,7 @@ go
 
 -- prescription_media
 create table [healthcare].[prescription_media] (
-	prescription_id int not null
+	prescription_id int not null,
     media_id int not null,
     primary key(prescription_id, media_id),
     foreign key(prescription_id) references [healthcare].[prescription](prescription_id) on delete cascade,
