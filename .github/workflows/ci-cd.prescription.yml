@@ -1,0 +1,91 @@
+name: Prescription Service CI/CD
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - 'src/PrescriptionService/**'
+      - '.github/workflows/ci-cd.prescription.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'src/PrescriptionService/**'
+      - '.github/workflows/ci-cd.prescription.yml'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Restore dependencies
+      run: dotnet restore src/PrescriptionService/prescription.api/prescription.api.csproj
+
+    - name: Build
+      run: dotnet build src/PrescriptionService/prescription.api/prescription.api.csproj --no-restore -c Release
+
+    - name: Login to Azure
+      uses: azure/login@v2
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Login to Azure Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ secrets.ACR_REGISTRY }}
+        username: ${{ secrets.ACR_USERNAME }}
+        password: ${{ secrets.ACR_PASSWORD }}
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v6
+      with:
+        context: .
+        file: src/PrescriptionService/prescription.api/Dockerfile
+        push: true
+        tags: |
+          ${{ secrets.ACR_REGISTRY }}/prescription-service:${{ github.sha }}
+          ${{ secrets.ACR_REGISTRY }}/prescription-service:latest
+        platforms: linux/amd64
+    
+    - name: Ensure Container Apps Environment Exists
+      uses: azure/CLI@v2
+      with:
+        inlineScript: |
+          az containerapp env show --name healthcare-ca-env --resource-group healthcare-rg || \
+          az containerapp env create \
+            --name healthcare-ca-env \
+            --resource-group healthcare-rg \
+            --location eastus \
+            --logs-destination none
+
+    - name: Deploy to Azure Container App
+      uses: azure/CLI@v2
+      with:
+        inlineScript: |
+          az containerapp create \
+            --name prescription-service \
+            --resource-group healthcare-rg \
+            --environment healthcare-ca-env \
+            --image ${{ secrets.ACR_REGISTRY }}/prescription-service:${{ github.sha }} \
+            --target-port 8080 \
+            --ingress external \
+            --registry-server ${{ secrets.ACR_REGISTRY }} \
+            --registry-username ${{ secrets.ACR_USERNAME }} \
+            --registry-password ${{ secrets.ACR_PASSWORD }} \
+            --user-assigned healthcare-identity \
+            --cpu 0.5 \
+            --memory 1.0Gi \
+            --min-replicas 1 \
+            --max-replicas 3 \
+            --env-vars \
+               "ASPNETCORE_ENVIRONMENT=Development" \
+               "KeyVault__VaultUri=https://healthcare-vault.vault.azure.net/" \
+               "AZURE_CLIENT_ID=${{ secrets.AZURE_CLIENT_ID }}"

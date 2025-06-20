@@ -76,6 +76,16 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "department.repositories", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "department.services", "src\DepartmentService\department.services\department.services.csproj", "{455709EC-E9BC-43F8-9B91-ECB0C07902E0}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "PrescriptionService", "PrescriptionService", "{17DF89A2-B83F-4342-925F-797E74E7EFA2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "prescription.api", "src\PrescriptionService\prescription.api\prescription.api.csproj", "{CD7ED9E6-B5B9-49C2-A355-91B4F92BD695}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "prescription.models", "src\PrescriptionService\prescription.models\prescription.models.csproj", "{95933D63-07A7-4C8B-AA4F-DFCEB0F40B0F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "prescription.repositories", "src\PrescriptionService\prescription.repositories\prescription.repositories.csproj", "{FBC0AA0B-A23D-4D43-9C57-449965043466}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "prescription.services", "src\PrescriptionService\prescription.services\prescription.services.csproj", "{EB5E3C59-CEC4-497A-B16D-6D7C6CD0A54D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -170,6 +180,22 @@ Global
 		{455709EC-E9BC-43F8-9B91-ECB0C07902E0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{455709EC-E9BC-43F8-9B91-ECB0C07902E0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{455709EC-E9BC-43F8-9B91-ECB0C07902E0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CD7ED9E6-B5B9-49C2-A355-91B4F92BD695}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CD7ED9E6-B5B9-49C2-A355-91B4F92BD695}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CD7ED9E6-B5B9-49C2-A355-91B4F92BD695}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CD7ED9E6-B5B9-49C2-A355-91B4F92BD695}.Release|Any CPU.Build.0 = Release|Any CPU
+		{95933D63-07A7-4C8B-AA4F-DFCEB0F40B0F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{95933D63-07A7-4C8B-AA4F-DFCEB0F40B0F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{95933D63-07A7-4C8B-AA4F-DFCEB0F40B0F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{95933D63-07A7-4C8B-AA4F-DFCEB0F40B0F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FBC0AA0B-A23D-4D43-9C57-449965043466}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FBC0AA0B-A23D-4D43-9C57-449965043466}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FBC0AA0B-A23D-4D43-9C57-449965043466}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FBC0AA0B-A23D-4D43-9C57-449965043466}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EB5E3C59-CEC4-497A-B16D-6D7C6CD0A54D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EB5E3C59-CEC4-497A-B16D-6D7C6CD0A54D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EB5E3C59-CEC4-497A-B16D-6D7C6CD0A54D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EB5E3C59-CEC4-497A-B16D-6D7C6CD0A54D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -205,6 +231,11 @@ Global
 		{81E65BAB-7A29-4831-B74E-41C984A95A1A} = {2ABF6EAA-A221-43A8-A3D7-CAE2D3AEE5EA}
 		{4B3D54D8-2AD8-4F17-BB55-B93545CF9A34} = {2ABF6EAA-A221-43A8-A3D7-CAE2D3AEE5EA}
 		{455709EC-E9BC-43F8-9B91-ECB0C07902E0} = {2ABF6EAA-A221-43A8-A3D7-CAE2D3AEE5EA}
+		{17DF89A2-B83F-4342-925F-797E74E7EFA2} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{CD7ED9E6-B5B9-49C2-A355-91B4F92BD695} = {17DF89A2-B83F-4342-925F-797E74E7EFA2}
+		{95933D63-07A7-4C8B-AA4F-DFCEB0F40B0F} = {17DF89A2-B83F-4342-925F-797E74E7EFA2}
+		{FBC0AA0B-A23D-4D43-9C57-449965043466} = {17DF89A2-B83F-4342-925F-797E74E7EFA2}
+		{EB5E3C59-CEC4-497A-B16D-6D7C6CD0A54D} = {17DF89A2-B83F-4342-925F-797E74E7EFA2}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E891FCEC-5112-41F8-A782-0C0E08065396}

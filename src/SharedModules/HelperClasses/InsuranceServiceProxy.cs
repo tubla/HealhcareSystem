@@ -1,17 +1,20 @@
-﻿using shared.HelperClasses.Contracts;
+﻿using Microsoft.AspNetCore.Http;
+using shared.HelperClasses.Contracts;
+using shared.HelperClasses.Extensions;
 
 namespace shared.HelperClasses;
 
-public class InsuranceServiceProxy(IHttpClientService _httpClientService) : IInsuranceServiceProxy
+public class InsuranceServiceProxy(IHttpClientService _httpClientService, IHttpContextAccessor _httpContextAccessor) : IInsuranceServiceProxy
 {
     private const string _baseUrl = "http://insurance-provider-service";
     public async Task<bool> CheckInsuranceProviderAsync(int insuranceProviderId, CancellationToken cancellationToken = default)
     {
         try
         {
-            var apiPath = $"api/v0/insurance/check-insurance-provider";
+            var apiPath = $"api/v0/insurances/check-insurance-provider";
+            var token = _httpContextAccessor.GetBearerToken()!;
             var request = new { InsuranceProviderId = insuranceProviderId };
-            return await ExecuteService(_httpClientService, apiPath, request, cancellationToken);
+            return await ExecuteService(_httpClientService, apiPath, request, token, cancellationToken);
         }
         catch (Exception)
         {
@@ -19,14 +22,14 @@ public class InsuranceServiceProxy(IHttpClientService _httpClientService) : IIns
         }
     }
 
-    private static async Task<bool> ExecuteService(IHttpClientService _httpClientService, string apiPath, object request, CancellationToken cancellationToken)
+    private static async Task<bool> ExecuteService(IHttpClientService _httpClientService, string apiPath, object request, string token, CancellationToken cancellationToken)
     {
         var response = await _httpClientService.SendAsync(
                         HttpMethod.Post,
                         _baseUrl,
                         apiPath,
                         request,
-                        bearerToken: null!, // or read from context
+                        bearerToken: token,
                         cancellationToken: cancellationToken
                     );
 

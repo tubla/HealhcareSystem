@@ -61,4 +61,12 @@ public class AppointmentController : ControllerBase
         var response = await _appointmentService.CancelAppointmentAsync(id, userId);
         return response.Success ? Ok(response) : BadRequest(response);
     }
+
+    [HttpPost("check-appointment-exists")]
+    public async Task<ActionResult<bool>> CheckAppointmentExists(CheckAppointmentDto dto, CancellationToken cancellationToken)
+    {
+        var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+        var response = await _appointmentService.GetAppointmentAsync(dto.AppointmentId, userId);
+        return response.Success ? Ok(true) : Ok(false);
+    }
 }
