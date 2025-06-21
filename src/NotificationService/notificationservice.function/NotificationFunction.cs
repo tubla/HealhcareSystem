@@ -2,7 +2,7 @@ using Azure.Messaging.EventHubs;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 using notificationservice.function.Contracts;
-using shared.Events;
+using shared.V1.Events;
 using System.Text.Json;
 
 namespace notificationservice.function

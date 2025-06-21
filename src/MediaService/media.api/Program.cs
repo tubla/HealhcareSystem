@@ -1,25 +1,22 @@
+using media.api.V1.Extensions;
+using shared.V1.HelperClasses.Extensions;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-
-builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-
-var app = builder.Build();
-
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+// Add services to the container..
+var tempLoggerFactory = LoggerFactory.Create(builder =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+    builder
+        .AddConsole()
+        .SetMinimumLevel(LogLevel.Information);
+});
 
-app.UseHttpsRedirection();
+var logger = tempLoggerFactory.CreateLogger("AppConfigurationExtension");
 
-app.UseAuthorization();
+// Load configuration from Azure App Configuration with Key Vault secrets
+builder.Configuration.AddAzureAppConfigurationWithSecrets(logger);
 
-app.MapControllers();
-
+builder.Services.AddServiceCollection(builder.Configuration);
+var app = builder.Build();
+app.UseApplicationMiddlewares();
 app.Run();

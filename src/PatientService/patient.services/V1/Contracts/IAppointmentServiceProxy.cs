@@ -4,5 +4,5 @@ namespace patient.services.V1.Contracts;
 
 public interface IAppointmentServiceProxyInternal
 {
-    public Task<IEnumerable<AppointmentDto>> GetAppointmentsAsync(int patientId, CancellationToken cancellationToken = default);
+    public Task<IEnumerable<AppointmentResponseDto>> GetAppointmentsAsync(int patientId, CancellationToken cancellationToken = default);
 }

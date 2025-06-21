@@ -9,7 +9,6 @@
   <ItemGroup>
     <ProjectReference Include="..\..\SharedModules\shared.csproj" />
     <ProjectReference Include="..\patient.repositories\patient.repositories.csproj" />
-    <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
 
   <ItemGroup>

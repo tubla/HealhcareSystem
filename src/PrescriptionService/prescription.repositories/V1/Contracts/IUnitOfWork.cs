@@ -2,6 +2,6 @@
 
 public interface IUnitOfWork
 {
-    IPrescriptionRepository Prescriptions { get; }
+    IPrescriptionRepository PrescriptionsRepository { get; }
     Task<int> CompleteAsync(CancellationToken cancellationToken = default);
 }

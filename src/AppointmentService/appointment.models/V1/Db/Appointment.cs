@@ -24,8 +24,10 @@ public class Appointment
 
     [Required]
     [Column("status")]
+    [StringLength(50)]
     public string Status { get; set; } = string.Empty;
 
     [Column("reason")]
-    public string? Reason { get; set; }
+    [StringLength(500)]
+    public string? Notes { get; set; }
 }

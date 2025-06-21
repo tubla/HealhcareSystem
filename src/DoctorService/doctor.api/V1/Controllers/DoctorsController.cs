@@ -2,7 +2,7 @@
 using doctor.services.V1.Contracts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using shared.Models;
+using shared.V1.Models;
 using System.Security.Claims;
 
 namespace doctor.api.V1.Controllers;
@@ -14,25 +14,25 @@ namespace doctor.api.V1.Controllers;
 public class DoctorsController(IDoctorService _doctorService) : ControllerBase
 {
     [HttpPost]
-    public async Task<ActionResult<Response<DoctorDto>>> Create([FromBody] CreateDoctorDto dto, CancellationToken cancellationToken = default)
+    public async Task<ActionResult<Response<DoctorResponseDto>>> Create([FromBody] CreateDoctorRequestDto dto, CancellationToken cancellationToken = default)
     {
-        var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+        int userId = GetUserId();
         var response = await _doctorService.CreateAsync(dto, userId, cancellationToken);
         return response.Success ? Ok(response) : StatusCode(response.StatusCode, response);
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<Response<DoctorDto>>> GetById(int id, CancellationToken cancellationToken = default)
+    public async Task<ActionResult<Response<DoctorResponseDto>>> GetById(int id, CancellationToken cancellationToken = default)
     {
-        var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+        int userId = GetUserId();
         var response = await _doctorService.GetByIdAsync(id, userId, cancellationToken);
         return response.Success ? Ok(response) : StatusCode(response.StatusCode, response);
     }
 
     [HttpPut]
-    public async Task<ActionResult<Response<DoctorDto>>> Update(int id, [FromBody] UpdateDoctorDto dto, CancellationToken cancellationToken = default)
+    public async Task<ActionResult<Response<DoctorResponseDto>>> Update(int id, [FromBody] UpdateDoctorRequestDto dto, CancellationToken cancellationToken = default)
     {
-        var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+        int userId = GetUserId();
         var response = await _doctorService.UpdateAsync(id, userId, dto, cancellationToken);
         return response.Success ? Ok(response) : StatusCode(response.StatusCode, response);
     }
@@ -40,16 +40,8 @@ public class DoctorsController(IDoctorService _doctorService) : ControllerBase
     [HttpDelete("{id}")]
     public async Task<ActionResult<Response<bool>>> Delete(int id, CancellationToken cancellationToken = default)
     {
-        var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+        int userId = GetUserId();
         var response = await _doctorService.DeleteAsync(id, userId, cancellationToken);
-        return response.Success ? Ok(response) : StatusCode(response.StatusCode, response);
-    }
-
-    [HttpGet("{id}/appointments")]
-    public async Task<ActionResult<Response<IEnumerable<AppointmentDto>>>> GetAppointments(int id, CancellationToken cancellationToken = default)
-    {
-        var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
-        var response = await _doctorService.GetAppointmentsAsync(id, userId, cancellationToken);
         return response.Success ? Ok(response) : StatusCode(response.StatusCode, response);
     }
 
@@ -59,12 +51,18 @@ public class DoctorsController(IDoctorService _doctorService) : ControllerBase
             CancellationToken cancellationToken = default
         )
     {
-        var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+        int userId = GetUserId();
         var result = await _doctorService.CheckDepartmentAsignedAsync(
             request.DeptId,
             userId,
             cancellationToken
         );
         return Ok(result);
+    }
+
+    private int GetUserId()
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        return string.IsNullOrEmpty(userIdClaim) ? 0 : int.Parse(userIdClaim);
     }
 }

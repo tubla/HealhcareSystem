@@ -4,9 +4,9 @@ using patient.models.V1.Db;
 using patient.models.V1.Dto;
 using patient.repositories.V1.Contracts;
 using patient.services.V1.Contracts;
-using shared.HelperClasses;
-using shared.HelperClasses.Contracts;
-using shared.Models;
+using shared.V1.HelperClasses;
+using shared.V1.HelperClasses.Contracts;
+using shared.V1.Models;
 
 namespace patient.services.V1.Services;
 
@@ -21,21 +21,21 @@ public class PatientService(
 
     private static readonly TimeSpan _cacheDuration = TimeSpan.FromMinutes(5);
 
-    public async Task<Response<PatientDto>> CreateAsync(CreatePatientDto dto, int userId, CancellationToken cancellationToken = default)
+    public async Task<Response<PatientResponseDto>> CreateAsync(CreatePatientRequestDto dto, int userId, CancellationToken cancellationToken = default)
     {
         if (!await _authServiceProxy.CheckPermissionAsync(userId, RbacPermissions.WritePatient, cancellationToken))
-            return Response<PatientDto>.Fail("Permission denied", 403);
+            return Response<PatientResponseDto>.Fail("Permission denied", 403);
 
         if (dto.InsuranceProviderId.HasValue)
         {
             try
             {
                 if (!await _insuranceServiceProxy.CheckInsuranceProviderAsync(dto.InsuranceProviderId.Value, cancellationToken))
-                    return Response<PatientDto>.Fail("Insurance provider not found", 404);
+                    return Response<PatientResponseDto>.Fail("Insurance provider not found", 404);
             }
             catch
             {
-                return Response<PatientDto>.Fail("Insurance provider not found", 404);
+                return Response<PatientResponseDto>.Fail("Insurance provider not found", 404);
             }
         }
 
@@ -45,29 +45,29 @@ public class PatientService(
             {
                 if (!await _authServiceProxy.CheckUserExistsAsync(dto.UserId.Value, cancellationToken))
                 {
-                    return Response<PatientDto>.Fail("User not found", 404);
+                    return Response<PatientResponseDto>.Fail("User not found", 404);
                 }
             }
             catch
             {
-                return Response<PatientDto>.Fail("User not found", 404);
+                return Response<PatientResponseDto>.Fail("User not found", 404);
             }
 
             // Check if the user is already associated with another patient
             var existingDoctorByUser = await _unitOfWork.PatientRepository.GetByUserIdAsync(dto.UserId.Value, cancellationToken);
             if (existingDoctorByUser != null)
-                return Response<PatientDto>.Fail("User is already associated with another patient", 409);
+                return Response<PatientResponseDto>.Fail("User is already associated with another patient", 409);
         }
 
         var existingPatient = await _unitOfWork.PatientRepository.GetByEmailAsync(dto.Email, cancellationToken);
         if (existingPatient != null)
-            return Response<PatientDto>.Fail("Patient with this email already exists", 409);
+            return Response<PatientResponseDto>.Fail("Patient with this email already exists", 409);
 
         if (dto.Dob > DateTime.Today || dto.Dob < DateTime.Today.AddYears(-120))
-            return Response<PatientDto>.Fail("Invalid date of birth", 400);
+            return Response<PatientResponseDto>.Fail("Invalid date of birth", 400);
 
         if (!new[] { "M", "F", "O" }.Contains(dto.Gender))
-            return Response<PatientDto>.Fail("Invalid gender. Must be 'M', 'F', or 'O'", 400);
+            return Response<PatientResponseDto>.Fail("Invalid gender. Must be 'M', 'F', or 'O'", 400);
 
         var patient = _mapper.Map<Patient>(dto);
         await _unitOfWork.PatientRepository.AddAsync(patient, cancellationToken);
@@ -76,50 +76,50 @@ public class PatientService(
         // Invalidate cache for this patient if it exists
         _memoryCache.Remove($"Patient_{patient.PatientId}");
 
-        return Response<PatientDto>.Ok(_mapper.Map<PatientDto>(patient));
+        return Response<PatientResponseDto>.Ok(_mapper.Map<PatientResponseDto>(patient));
     }
 
-    public async Task<Response<PatientDto>> GetByIdAsync(int id, int userId, CancellationToken cancellationToken = default)
+    public async Task<Response<PatientResponseDto>> GetByIdAsync(int id, int userId, CancellationToken cancellationToken = default)
     {
         if (!await _authServiceProxy.CheckPermissionAsync(userId, RbacPermissions.ReadPatient, cancellationToken))
-            return Response<PatientDto>.Fail("Permission denied", 403);
+            return Response<PatientResponseDto>.Fail("Permission denied", 403);
 
         var cacheKey = $"Patient_{id}";
-        if (_memoryCache.TryGetValue(cacheKey, out PatientDto? cachedPatient))
-            return Response<PatientDto>.Ok(cachedPatient!);
+        if (_memoryCache.TryGetValue(cacheKey, out PatientResponseDto? cachedPatient))
+            return Response<PatientResponseDto>.Ok(cachedPatient!);
 
         var patient = await _unitOfWork.PatientRepository.GetByIdAsync(id, cancellationToken);
         if (patient == null)
-            return Response<PatientDto>.Fail($"Patient {id} not found", 404);
+            return Response<PatientResponseDto>.Fail($"Patient {id} not found", 404);
 
-        var patientDto = _mapper.Map<PatientDto>(patient);
+        var patientDto = _mapper.Map<PatientResponseDto>(patient);
         _memoryCache.Set(cacheKey, patientDto, new MemoryCacheEntryOptions
         {
             AbsoluteExpirationRelativeToNow = _cacheDuration
         });
 
-        return Response<PatientDto>.Ok(patientDto);
+        return Response<PatientResponseDto>.Ok(patientDto);
     }
 
-    public async Task<Response<PatientDto>> UpdateAsync(int id, UpdatePatientDto dto, int userId, CancellationToken cancellationToken = default)
+    public async Task<Response<PatientResponseDto>> UpdateAsync(int id, UpdatePatientRequestDto dto, int userId, CancellationToken cancellationToken = default)
     {
         if (!await _authServiceProxy.CheckPermissionAsync(userId, RbacPermissions.WritePatient, cancellationToken))
-            return Response<PatientDto>.Fail("Permission denied", 403);
+            return Response<PatientResponseDto>.Fail("Permission denied", 403);
 
         var patient = await _unitOfWork.PatientRepository.GetByIdAsync(id, cancellationToken);
         if (patient == null)
-            return Response<PatientDto>.Fail($"Patient {id} not found", 404);
+            return Response<PatientResponseDto>.Fail($"Patient {id} not found", 404);
 
         if (dto.IsInsuranceProviderIdSet && dto.InsuranceProviderId.HasValue && dto.InsuranceProviderId > 0)
         {
             try
             {
                 if (!await _insuranceServiceProxy.CheckInsuranceProviderAsync(dto.InsuranceProviderId.Value, cancellationToken))
-                    return Response<PatientDto>.Fail("Insurance provider not found", 404);
+                    return Response<PatientResponseDto>.Fail("Insurance provider not found", 404);
             }
             catch
             {
-                return Response<PatientDto>.Fail("Insurance provider not found", 404);
+                return Response<PatientResponseDto>.Fail("Insurance provider not found", 404);
             }
 
             patient.InsuranceProviderId = dto.InsuranceProviderId.Value;
@@ -131,18 +131,18 @@ public class PatientService(
             {
                 if (!await _authServiceProxy.CheckUserExistsAsync(dto.UserId.Value, cancellationToken))
                 {
-                    return Response<PatientDto>.Fail("User not found", 404);
+                    return Response<PatientResponseDto>.Fail("User not found", 404);
                 }
             }
             catch
             {
-                return Response<PatientDto>.Fail("User not found", 404);
+                return Response<PatientResponseDto>.Fail("User not found", 404);
             }
 
             // Check if the user is already associated with another patient
             var existingDoctorByUser = await _unitOfWork.PatientRepository.GetByUserIdAsync(dto.UserId.Value, cancellationToken);
             if (existingDoctorByUser != null)
-                return Response<PatientDto>.Fail("User is already associated with another patient", 409);
+                return Response<PatientResponseDto>.Fail("User is already associated with another patient", 409);
 
             patient.UserId = dto.UserId.Value;
         }
@@ -151,13 +151,13 @@ public class PatientService(
         {
             var existingPatient = await _unitOfWork.PatientRepository.GetByEmailAsync(dto.Email, cancellationToken);
             if (existingPatient != null && existingPatient.PatientId != id)
-                return Response<PatientDto>.Fail("Patient with this email already exists", 409);
+                return Response<PatientResponseDto>.Fail("Patient with this email already exists", 409);
         }
 
         if (dto.IsDobSet)
         {
             if (dto.Dob > DateTime.Today || dto.Dob < DateTime.Today.AddYears(-120))
-                return Response<PatientDto>.Fail("Invalid date of birth", 400);
+                return Response<PatientResponseDto>.Fail("Invalid date of birth", 400);
 
             patient.Dob = dto.Dob;
         }
@@ -165,7 +165,7 @@ public class PatientService(
         if (dto.IsGenderSet)
         {
             if (!new[] { "M", "F", "O" }.Contains(dto.Gender))
-                return Response<PatientDto>.Fail("Invalid gender. Must be 'M', 'F', or 'O'", 400);
+                return Response<PatientResponseDto>.Fail("Invalid gender. Must be 'M', 'F', or 'O'", 400);
 
             patient.Gender = dto.Gender;
         }
@@ -174,7 +174,7 @@ public class PatientService(
         {
             var existingPaientByPhone = await _unitOfWork.PatientRepository.GetByPhoneAsync(dto.Phone, cancellationToken);
             if (existingPaientByPhone != null && existingPaientByPhone.PatientId != id)
-                return Response<PatientDto>.Fail("Another patient with this phone number exists", 409);
+                return Response<PatientResponseDto>.Fail("Another patient with this phone number exists", 409);
 
             patient.Phone = dto.Phone;
         }
@@ -189,7 +189,7 @@ public class PatientService(
         // Invalidate cache for this patient
         _memoryCache.Remove($"Patient_{id}");
 
-        return Response<PatientDto>.Ok(_mapper.Map<PatientDto>(patient));
+        return Response<PatientResponseDto>.Ok(_mapper.Map<PatientResponseDto>(patient));
     }
 
     public async Task<Response<bool>> DeleteAsync(int id, int userId, CancellationToken cancellationToken = default)
@@ -210,18 +210,18 @@ public class PatientService(
         return Response<bool>.Ok(true);
     }
 
-    public async Task<Response<IEnumerable<AppointmentDto>>> GetAppointmentsAsync(int patientId, int userId, CancellationToken cancellationToken = default)
+    public async Task<Response<IEnumerable<AppointmentResponseDto>>> GetAppointmentsAsync(int patientId, int userId, CancellationToken cancellationToken = default)
     {
         if (!await _authServiceProxy.CheckPermissionAsync(userId, RbacPermissions.ReadAppointment, cancellationToken))
-            return Response<IEnumerable<AppointmentDto>>.Fail("Permission denied", 403);
+            return Response<IEnumerable<AppointmentResponseDto>>.Fail("Permission denied", 403);
 
         var patient = await _unitOfWork.PatientRepository.GetByIdAsync(patientId, cancellationToken);
         if (patient == null)
-            return Response<IEnumerable<AppointmentDto>>.Fail($"Patient {patientId} not found", 404);
+            return Response<IEnumerable<AppointmentResponseDto>>.Fail($"Patient {patientId} not found", 404);
 
         var cacheKey = $"PatientAppointments_{patientId}";
-        if (_memoryCache.TryGetValue(cacheKey, out IEnumerable<AppointmentDto>? cachedAppointments))
-            return Response<IEnumerable<AppointmentDto>>.Ok(cachedAppointments!);
+        if (_memoryCache.TryGetValue(cacheKey, out IEnumerable<AppointmentResponseDto>? cachedAppointments))
+            return Response<IEnumerable<AppointmentResponseDto>>.Ok(cachedAppointments!);
 
         try
         {
@@ -232,11 +232,11 @@ public class PatientService(
                 AbsoluteExpirationRelativeToNow = _cacheDuration
             });
 
-            return Response<IEnumerable<AppointmentDto>>.Ok(data);
+            return Response<IEnumerable<AppointmentResponseDto>>.Ok(data);
         }
         catch (Exception ex)
         {
-            return Response<IEnumerable<AppointmentDto>>.Fail($"Failed to retrieve appointments: {ex.Message}", 500);
+            return Response<IEnumerable<AppointmentResponseDto>>.Fail($"Failed to retrieve appointments: {ex.Message}", 500);
         }
     }
 }

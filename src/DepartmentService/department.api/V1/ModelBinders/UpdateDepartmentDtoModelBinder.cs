@@ -14,11 +14,11 @@ internal class UpdateDepartmentDtoModelBinder : IModelBinder
         using var reader = new StreamReader(bindingContext.HttpContext.Request.Body);
         var body = await reader.ReadToEndAsync();
 
-        UpdateDepartmentDto? dto;
+        UpdateDepartmentRequestDto? dto;
 
         try
         {
-            dto = JsonSerializer.Deserialize<UpdateDepartmentDto>(body);
+            dto = JsonSerializer.Deserialize<UpdateDepartmentRequestDto>(body);
         }
         catch (JsonException)
         {

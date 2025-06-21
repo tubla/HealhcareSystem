@@ -2,7 +2,7 @@
 using authentication.services.V1.Contracts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using shared.Models;
+using shared.V1.Models;
 
 namespace authentication.api.V1.Controllers
 {
@@ -13,7 +13,7 @@ namespace authentication.api.V1.Controllers
     {
         [HttpPost("register")]
         [AllowAnonymous]
-        public async Task<ActionResult<Response<UserDto>>> Register(
+        public async Task<ActionResult<Response<UserResponseDto>>> Register(
             [FromBody] RegisterRequestDto request,
             CancellationToken cancellationToken = default
         )

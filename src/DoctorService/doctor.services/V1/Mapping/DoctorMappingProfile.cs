@@ -8,7 +8,7 @@ public class DoctorMappingProfile : Profile
 {
     public DoctorMappingProfile()
     {
-        CreateMap<CreateDoctorDto, Doctor>();
-        CreateMap<Doctor, DoctorDto>();
+        CreateMap<CreateDoctorRequestDto, Doctor>();
+        CreateMap<Doctor, DoctorResponseDto>();
     }
 }

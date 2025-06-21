@@ -13,7 +13,7 @@ internal class ModelBinderProvider : IModelBinderProvider
             throw new ArgumentNullException(nameof(context));
         }
 
-        if (context.Metadata.ModelType == typeof(UpdateDepartmentDto))
+        if (context.Metadata.ModelType == typeof(UpdateDepartmentRequestDto))
         {
             return new BinderTypeModelBinder(typeof(UpdateDepartmentDtoModelBinder));
         }

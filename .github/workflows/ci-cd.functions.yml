@@ -1,0 +1,55 @@
+name: Background Job Functions CI/CD
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - 'src/Functions/**'
+      - '.github/workflows/ci-cd.functions.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'src/Functions/**'
+      - '.github/workflows/ci-cd.functions.yml'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Restore dependencies
+      run: dotnet restore src/Functions/BackgroundJobFunctions/BackgroundJobFunctions.csproj
+
+    - name: Build
+      run: dotnet build src/Functions/BackgroundJobFunctions/BackgroundJobFunctions.csproj --no-restore -c Release
+
+    - name: Publish Function App
+      run: dotnet publish src/Functions/BackgroundJobFunctions/BackgroundJobFunctions.csproj -c Release -o ./publish
+
+    - name: Login to Azure
+      uses: azure/login@v2
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Deploy to Azure Function App
+      uses: Azure/functions-action@v1
+      with:
+        app-name: healthcare-functions
+        package: ./publish
+        credentials: ${{ secrets.AZURE_CREDENTIALS }}
+        app-settings: |
+          ASPNETCORE_ENVIRONMENT=Development
+          KeyVault__VaultUri: "https://healthcare-vault.vault.azure.net/"
+          ConnectionStrings__SqlConnection: "secret://healthcare-vault/SqlConnection"
+          EventHubConnection=secret://healthcare-vault/EventHubConnection
+          AzureBlobConnection=secret://healthcare-vault/AzureBlobConnection
+          APPLICATIONINSIGHTS_CONNECTION_STRING=secret://healthcare-vault/AppInsightsConnection

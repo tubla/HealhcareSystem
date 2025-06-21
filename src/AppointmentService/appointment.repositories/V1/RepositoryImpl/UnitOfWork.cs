@@ -1,4 +1,4 @@
-﻿using appointment.models.V1.Context;
+﻿using appointment.repositories.V1.Context;
 using appointment.repositories.V1.Contracts;
 
 namespace appointment.repositories.V1.RepositoryImpl;

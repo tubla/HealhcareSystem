@@ -8,7 +8,7 @@ public class AppointmentMappingProfile : Profile
 {
     public AppointmentMappingProfile()
     {
-        CreateMap<AppointmentDto, Appointment>()
+        CreateMap<AppointmentResponseDto, Appointment>()
             .ForMember(dest => dest.AppointmentId, opt => opt.Ignore())
             .ForMember(dest => dest.Status, opt => opt.Ignore())
             .ForMember(dest => dest.PatientId, opt => opt.MapFrom(src => src.PatientId))
@@ -18,7 +18,7 @@ public class AppointmentMappingProfile : Profile
                 opt => opt.MapFrom(src => src.AppointmentDateTime)
             );
 
-        CreateMap<Appointment, AppointmentDto>()
+        CreateMap<Appointment, AppointmentResponseDto>()
             .ForMember(dest => dest.AppointmentId, opt => opt.MapFrom(src => src.AppointmentId))
             .ForMember(dest => dest.PatientId, opt => opt.MapFrom(src => src.PatientId))
             .ForMember(dest => dest.DoctorId, opt => opt.MapFrom(src => src.DoctorId))
@@ -28,7 +28,7 @@ public class AppointmentMappingProfile : Profile
             )
             .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status));
 
-        CreateMap<CreateAppointmentDto, Appointment>()
+        CreateMap<CreateAppointmentRequestDto, Appointment>()
             .ForMember(dest => dest.AppointmentId, opt => opt.Ignore())
             .ForMember(dest => dest.Status, opt => opt.Ignore())
             .ForMember(dest => dest.PatientId, opt => opt.MapFrom(src => src.PatientId))

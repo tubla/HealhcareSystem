@@ -6,7 +6,7 @@ namespace prescription.repositories.V1.Repositories;
 public class UnitOfWork(PrescriptionDbContext _context) : IUnitOfWork
 {
     private IPrescriptionRepository? _prescriptionRepository;
-    public IPrescriptionRepository Prescriptions
+    public IPrescriptionRepository PrescriptionsRepository
     {
         get
         {

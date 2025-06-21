@@ -1,5 +1,5 @@
-﻿using appointment.models.V1.Context;
-using appointment.models.V1.Db;
+﻿using appointment.models.V1.Db;
+using appointment.repositories.V1.Context;
 using appointment.repositories.V1.Contracts;
 using Microsoft.EntityFrameworkCore;
 
@@ -18,6 +18,13 @@ public class AppointmentRepository : IAppointmentRepository
     {
         return await _context.Appointments
             .FirstOrDefaultAsync(a => a.AppointmentId == id, cancellationToken);
+    }
+
+    public async Task<IEnumerable<Appointment>> GetByDoctorIdAndDateAsync(int doctorId, DateTime date, CancellationToken cancellationToken = default)
+    {
+        return await _context.Appointments
+            .Where(a => a.DoctorId == doctorId && a.AppointmentDateTime == date)
+            .ToListAsync(cancellationToken);
     }
 
     public async Task<IEnumerable<Appointment>> GetByDoctorIdAsync(int doctorId, CancellationToken cancellationToken = default)
@@ -42,17 +49,26 @@ public class AppointmentRepository : IAppointmentRepository
         await _context.Appointments.AddAsync(appointment, cancellationToken);
     }
 
-    public async Task<bool> IsDoctorAvailableAsync(int doctorId, DateTime dateTime, CancellationToken cancellationToken = default)
+    public async Task<bool> IsDoctorAvailableAsync(int doctorId, DateTime appointmentDateTime, int? excludeAppointmentId = null, CancellationToken cancellationToken = default)
     {
-        // Check for overlapping appointments within a 30-minute window
-        var startTime = dateTime.AddMinutes(-30);
-        var endTime = dateTime.AddMinutes(30);
+        var slotDuration = TimeSpan.FromMinutes(30);
+        var startTime = appointmentDateTime;
+        var endTime = appointmentDateTime.Add(slotDuration);
 
         return !await _context.Appointments
-            .AnyAsync(a => a.DoctorId == doctorId
-                && a.AppointmentDateTime >= startTime
+            .Where(a => a.DoctorId == doctorId
+                && a.Status != "Cancelled"
                 && a.AppointmentDateTime < endTime
-                && a.Status != "Cancelled",
-                cancellationToken);
+                && a.AppointmentDateTime.Add(slotDuration) > startTime
+                && (!excludeAppointmentId.HasValue || a.AppointmentId != excludeAppointmentId.Value))
+            .AnyAsync(cancellationToken);
+    }
+
+    public void Remove(Appointment appointment)
+    {
+        if (appointment == null)
+            throw new ArgumentNullException(nameof(appointment));
+
+        _context.Appointments.Remove(appointment);
     }
 }

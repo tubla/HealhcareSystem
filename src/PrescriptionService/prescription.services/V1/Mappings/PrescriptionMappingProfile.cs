@@ -8,7 +8,7 @@ public class PrescriptionMappingProfile : Profile
 {
     public PrescriptionMappingProfile()
     {
-        CreateMap<CreatePrescriptionDto, Prescription>();
-        CreateMap<Prescription, CreatePrescriptionDto>();
+        CreateMap<CreatePrescriptionRequestDto, Prescription>();
+        CreateMap<Prescription, CreatePrescriptionRequestDto>();
     }
 }

@@ -1,4 +1,5 @@
 using patient.api.V1.Extensions;
+using shared.V1.HelperClasses.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,7 +12,10 @@ var tempLoggerFactory = LoggerFactory.Create(builder =>
 });
 
 var logger = tempLoggerFactory.CreateLogger("AppConfigurationExtension");
+
+// Load configuration from Azure App Configuration with Key Vault secrets
 builder.Configuration.AddAzureAppConfigurationWithSecrets(logger);
+
 builder.Services.AddServiceCollection(builder.Configuration);
 var app = builder.Build();
 app.UseApplicationMiddlewares();

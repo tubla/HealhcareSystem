@@ -1,5 +1,6 @@
 ﻿using appointment.api.V1.Extensions;
-using appointment.models.V1.Context;
+using appointment.api.V1.ModelBinders;
+using appointment.repositories.V1.Context;
 using appointment.services.V1.Extensions;
 using appointment.services.V1.Mapping;
 using Azure.Identity;
@@ -20,7 +21,7 @@ internal static class ServiceCollectionExtension
         ConfigurationManager configuration
     )
     {
-        services.AddControllers();
+        services.AddControllers(options => options.ModelBinderProviders.Insert(0, new ModelBinderProvider()));
         services.AddEndpointsApiExplorer();
         services.AddSwagerUi();
         services.AddAuthorization();

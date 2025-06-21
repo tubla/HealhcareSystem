@@ -16,7 +16,6 @@
       "launchUrl": "swagger",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        //"AppConfiguration:ConnectionString": "https://healthcare-appconfig.azconfig.io",
         "KeyVault:VaultUri": "https://healthcare-vault.vault.azure.net/"
       },
       "dotnetRunMessages": true,
