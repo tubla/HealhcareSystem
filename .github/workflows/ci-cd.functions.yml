@@ -16,6 +16,7 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    environment: Development
 
     steps:
     - name: Checkout code
@@ -33,16 +34,17 @@ jobs:
       run: dotnet build src/Functions/BackgroundJobFunctions/BackgroundJobFunctions.csproj --no-restore -c Release
 
     - name: Publish Function App
-      run: dotnet publish src/Functions/BackgroundJobFunctions/BackgroundJobFunctions.csproj -c Release -o ./publish --no-build /p:UseAppHost=false
+      run: dotnet publish src/Functions/BackgroundJobFunctions/BackgroundJobFunctions.csproj -c Release -o ./publish --no-build /p:UseAppHost=false /p:GenerateAzureFunctionsMetadata=true
 
     - name: List published files
       run: ls -R ./publish
 
-    #- name: Zip publish output
-    #  run: |
-    #    cd ./publish
-    #    zip -r ../functionapp.zip .
-    #    cd -
+    - name: Create ZIP package
+      run: zip -r functionapp.zip ./publish
+      working-directory: .
+
+    - name: List ZIP contents
+      run: unzip -l functionapp.zip
 
     - name: Login to Azure
       uses: azure/login@v2
@@ -52,14 +54,14 @@ jobs:
     - name: Deploy to Azure Function App
       uses: Azure/functions-action@v1
       with:
-        app-name: healthcare-functions
-        package: ./publish
+        app-name: healthcare-functions-dev
+        package: ./functionapp.zip
         creds: ${{ secrets.AZURE_CREDENTIALS }}
+        respect-pom-file: false
         respect-funcignore: true
         scm-do-build-during-deployment: false
         enable-oryx-build: false
         app-settings: |
-          WEBSITE_RUN_FROM_PACKAGE=1
           ASPNETCORE_ENVIRONMENT=Development
           KeyVault__VaultUri=https://healthcare-vault.vault.azure.net/
           ConnectionStrings__SqlConnection=secret://healthcare-vault/SqlConnection

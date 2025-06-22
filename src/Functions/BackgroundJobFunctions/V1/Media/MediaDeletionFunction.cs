@@ -1,17 +1,13 @@
 using Azure.Messaging.EventHubs;
 using Azure.Storage.Blobs;
+using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using shared.V1.Events;
 using shared.V1.HelperClasses.Contracts;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace BackgroundJobFunctions.V1.Media;
 

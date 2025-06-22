@@ -5,7 +5,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using shared.V1.HelperClasses.Contracts;
 using shared.V1.HelperClasses.Extensions;
-using System.Collections.Generic;
 
 var builder = new HostApplicationBuilder(args);
 
@@ -23,7 +22,7 @@ builder.Configuration.AddInMemoryCollection(new Dictionary<string, string>
 {
     { "EventHubConnection", eventHubConn },
     { "AzureBlobStorage:ContainerName", "media" }
-});
+}!);
 
 // Register real services for the app, now that config is complete
 builder.Services.AddMemoryCache();
