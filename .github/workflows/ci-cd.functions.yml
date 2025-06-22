@@ -51,7 +51,7 @@ jobs:
       with:
         app-name: healthcare-functions
         package: ./functionapp.zip
-        publish-profile: ${{ secrets.AZURE_FUNCTIONS_PUBLISH_PROFILE }}
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
         respect-funcignore: true
         scm-do-build-during-deployment: false
         enable-oryx-build: false
