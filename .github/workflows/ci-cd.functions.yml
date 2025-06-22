@@ -27,6 +27,9 @@ jobs:
       with:
         dotnet-version: '8.0.x'
 
+    - name: Clean solution
+      run: dotnet clean src/Functions/BackgroundJobFunctions/BackgroundJobFunctions.csproj -c Release
+
     - name: Restore dependencies
       run: dotnet restore src/Functions/BackgroundJobFunctions/BackgroundJobFunctions.csproj
 
@@ -34,7 +37,13 @@ jobs:
       run: dotnet build src/Functions/BackgroundJobFunctions/BackgroundJobFunctions.csproj --no-restore -c Release
 
     - name: Publish Function App
-      run: dotnet publish src/Functions/BackgroundJobFunctions/BackgroundJobFunctions.csproj -c Release -o ./publish --no-build /p:UseAppHost=false /p:GenerateAzureFunctionsMetadata=true
+      run: dotnet publish src/Functions/BackgroundJobFunctions/BackgroundJobFunctions.csproj -c Release -o ./publish --no-build /p:UseAppHost=false /p:GenerateAzureFunctionsMetadata=true /p:CopyOutputSymbolsToPublishDirectory=false
+
+    - name: Ensure host.json
+      run: |
+        if [ ! -f ./publish/host.json ]; then
+          echo '{"version":"2.0","logging":{"applicationInsights":{"samplingSettings":{"isEnabled":true}}}}' > ./publish/host.json
+        fi
 
     - name: List published files
       run: ls -R ./publish
@@ -42,21 +51,7 @@ jobs:
     - name: Create ZIP package
       run: zip -r functionapp.zip ./publish
       working-directory: .
-
-    - name: List ZIP contents
-      run: unzip -l functionapp.zip
-
-    - name: Login to Azure
-      uses: azure/login@v2
-      with:
-        creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-    - name: Deploy to Azure Function App
-      uses: Azure/functions-action@v1
-      with:
-        app-name: healthcare-functions
-        package: ./functionapp.zip
-        creds: ${{ secrets.AZURE_CREDENTIALS }}
+        publish-profile: ${{ secrets.AZURE_FUNCTIONS_PUBLISH_PROFILE }}
         respect-pom-file: false
         respect-funcignore: true
         scm-do-build-during-deployment: false
