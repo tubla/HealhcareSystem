@@ -33,7 +33,7 @@ jobs:
       run: dotnet build src/Functions/BackgroundJobFunctions/BackgroundJobFunctions.csproj --no-restore -c Release
 
     - name: Publish Function App
-      run: dotnet publish src/Functions/BackgroundJobFunctions/BackgroundJobFunctions.csproj -c Release -o ./publish
+      run: dotnet publish src/Functions/BackgroundJobFunctions/BackgroundJobFunctions.csproj -c Release -o ./HealthcareSystem/publish
 
     - name: Login to Azure
       uses: azure/login@v2
@@ -47,6 +47,7 @@ jobs:
         package: ./publish
         credentials: ${{ secrets.AZURE_CREDENTIALS }}
         app-settings: |
+          WEBSITE_RUN_FROM_PACKAGE=1
           ASPNETCORE_ENVIRONMENT=Development
           KeyVault__VaultUri=https://healthcare-vault.vault.azure.net/
           ConnectionStrings__SqlConnection=secret://healthcare-vault/SqlConnection
