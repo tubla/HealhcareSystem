@@ -39,18 +39,20 @@ jobs:
     - name: Publish Function App
       run: dotnet publish src/Functions/BackgroundJobFunctions/BackgroundJobFunctions.csproj -c Release -o ./publish /p:UseAppHost=false /p:GenerateAzureFunctionsMetadata=true /p:CopyOutputSymbolsToPublishDirectory=false
 
-    - name: Ensure host.json
+    - name: Create host.json if missing
       run: |
         if [ ! -f src/Functions/BackgroundJobFunctions/host.json ]; then
           echo '{"version":"2.0","logging":{"applicationInsights":{"samplingSettings":{"isEnabled":true}}}}' > src/Functions/BackgroundJobFunctions/host.json
         fi
-        cp src/Functions/BackgroundJobFunctions/host.json ./publish/host.json
+
+    - name: Copy host.json to publish directory
+      run: cp src/Functions/BackgroundJobFunctions/host.json ./publish/host.json
 
     - name: List published files
       run: ls -R ./publish
 
     - name: Create ZIP package
-      run: zip -r functionapp.zip ./publish
+      run: cd ./publish && zip -r ../functionapp.zip .
       working-directory: .
 
     - name: List ZIP contents
@@ -64,7 +66,7 @@ jobs:
     - name: Deploy to Azure Function App
       uses: Azure/functions-action@v1
       with:
-        app-name: healthcare-functions
+        app-name: healthcare-functions-dev
         package: ./functionapp.zip
         creds: ${{ secrets.AZURE_CREDENTIALS }}
         respect-pom-file: false
