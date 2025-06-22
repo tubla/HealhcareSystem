@@ -33,13 +33,16 @@ jobs:
       run: dotnet build src/Functions/BackgroundJobFunctions/BackgroundJobFunctions.csproj --no-restore -c Release
 
     - name: Publish Function App
-      run: dotnet publish src/Functions/BackgroundJobFunctions/BackgroundJobFunctions.csproj -c Release -o ./HealthcareSystem/publish
+      run: dotnet publish src/Functions/BackgroundJobFunctions/BackgroundJobFunctions.csproj -c Release -o ./publish --no-build /p:UseAppHost=false
 
-    - name: Zip publish output
-      run: |
-        cd ./HealthcareSystem/publish
-        zip -r ../../functionapp.zip .
-        cd -
+    - name: List published files
+      run: ls -R ./publish
+
+    #- name: Zip publish output
+    #  run: |
+    #    cd ./publish
+    #    zip -r ../functionapp.zip .
+    #    cd -
 
     - name: Login to Azure
       uses: azure/login@v2
@@ -50,7 +53,7 @@ jobs:
       uses: Azure/functions-action@v1
       with:
         app-name: healthcare-functions
-        package: ./functionapp.zip
+        package: ./publish
         creds: ${{ secrets.AZURE_CREDENTIALS }}
         respect-funcignore: true
         scm-do-build-during-deployment: false
