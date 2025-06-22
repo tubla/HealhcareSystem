@@ -46,11 +46,6 @@ jobs:
         app-name: healthcare-functions
         package: ./publish
         credentials: ${{ secrets.AZURE_CREDENTIALS }}
-        publish-profile: ${{ secrets.AZURE_FUNCTIONS_PUBLISH_PROFILE }}
-        respect-pom-file: false
-        respect-funcignore: true
-        scm-do-build-during-deployment: false
-        enable-oryx-build: false
         app-settings: |
           ASPNETCORE_ENVIRONMENT=Development
           KeyVault__VaultUri=https://healthcare-vault.vault.azure.net/
