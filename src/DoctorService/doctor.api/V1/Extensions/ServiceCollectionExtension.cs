@@ -2,14 +2,17 @@
 using Azure.Security.KeyVault.Secrets;
 using doctor.api.V1.Extensions;
 using doctor.api.V1.ModelBinders;
+using doctor.models.V1.Dto;
 using doctor.repositories.V1.Context;
 using doctor.services.V1.Extensions;
 using doctor.services.V1.Mapping;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Azure;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using shared.V1.ModelBinders;
 using System.Text;
 
 namespace doctor.api.V1.Extensions;
@@ -21,7 +24,14 @@ internal static class ServiceCollectionExtension
         ConfigurationManager configuration
     )
     {
-        services.AddControllers(options => options.ModelBinderProviders.Insert(0, new ModelBinderProvider()));
+        services.AddControllers(options =>
+        {
+            var provider = services
+         .BuildServiceProvider()
+         .GetRequiredService<IModelBinderProvider>();
+
+            options.ModelBinderProviders.Insert(0, provider);
+        });
         services.AddEndpointsApiExplorer();
         services.AddSwagerUi();
         services.AddAuthorization();
@@ -30,12 +40,20 @@ internal static class ServiceCollectionExtension
         {
             clientBuilder.UseCredential(new DefaultAzureCredential());
         });
-        AddAuthDbContext(services, configuration);
+        services.AddAuthDbContext(configuration);
         services.AddApiVersioning();
         services.AddJwtAuthentication(configuration);
         services.AddAutoMapper(typeof(DoctorMappingProfile));
         services.AddHttpClient();
         services.AddDoctorServices();
+        services.AddModelBinder();
+    }
+
+    private static void AddModelBinder(this IServiceCollection services)
+    {
+        services.AddTransient<IPropertySetChecker<UpdateDoctorRequestDto>, UpdateDoctorDtoPropertyChecker>();
+        services.AddSingleton<IModelBinderProvider>(sp =>
+            new GenericModelBinderProvider<UpdateDoctorRequestDto>(sp));
     }
 
     private static void AddSwagerUi(this IServiceCollection services)
@@ -70,7 +88,7 @@ internal static class ServiceCollectionExtension
         });
     }
 
-    private static void AddAuthDbContext(IServiceCollection services, ConfigurationManager configuration)
+    private static void AddAuthDbContext(this IServiceCollection services, ConfigurationManager configuration)
     {
         var keyVaultUri = configuration["KeyVault:VaultUri"]
                 ?? Environment.GetEnvironmentVariable("KeyVault:VaultUri")

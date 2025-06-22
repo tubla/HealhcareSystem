@@ -1,12 +1,17 @@
-using appointment.models.V1.Dtos;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
+﻿using Microsoft.AspNetCore.Mvc.ModelBinding;
 using System.Text.Json;
 
-namespace appointment.api.V1.ModelBinders;
+namespace shared.V1.ModelBinders;
 
-internal class UpdateAppointmentRequestDtoModelBinder : IModelBinder
+public class GenericModelBinder<T> : IModelBinder where T : class
 {
-    /// <summary/>
+    private readonly IPropertySetChecker<T> _propertyChecker;
+
+    public GenericModelBinder(IPropertySetChecker<T> propertyChecker)
+    {
+        _propertyChecker = propertyChecker;
+    }
+
     public async Task BindModelAsync(ModelBindingContext bindingContext)
     {
         ArgumentNullException.ThrowIfNull(bindingContext);
@@ -14,11 +19,10 @@ internal class UpdateAppointmentRequestDtoModelBinder : IModelBinder
         using var reader = new StreamReader(bindingContext.HttpContext.Request.Body);
         var body = await reader.ReadToEndAsync();
 
-        UpdateAppointmentRequestDto? dto;
-
+        T? dto;
         try
         {
-            dto = JsonSerializer.Deserialize<UpdateAppointmentRequestDto>(body);
+            dto = JsonSerializer.Deserialize<T>(body);
         }
         catch (JsonException)
         {
@@ -28,10 +32,7 @@ internal class UpdateAppointmentRequestDtoModelBinder : IModelBinder
 
         if (dto != null)
         {
-            dto.IsPatientIdSet = body.Contains("\"patient_id\"");
-            dto.IsDoctorIdSet = body.Contains("\"doctor_id\"");
-            dto.IsAppointmentDateTimeSet = body.Contains("\"appointment_datetime\"");
-            dto.IsNotesSet = body.Contains("\"notes\"");
+            _propertyChecker.CheckProperties(dto, body);
             bindingContext.Result = ModelBindingResult.Success(dto);
         }
         else
@@ -40,3 +41,4 @@ internal class UpdateAppointmentRequestDtoModelBinder : IModelBinder
         }
     }
 }
+

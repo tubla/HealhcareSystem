@@ -1,15 +1,18 @@
 ﻿using Azure.Identity;
 using Azure.Security.KeyVault.Secrets;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Azure;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using patient.api.V1.Extensions;
 using patient.api.V1.ModelBinders;
+using patient.models.V1.Dto;
 using patient.repositories.V1.Context;
 using patient.services.V1.Extensions;
 using patient.services.V1.Mapping;
+using shared.V1.ModelBinders;
 using System.Text;
 
 namespace patient.api.V1.Extensions;
@@ -21,7 +24,14 @@ internal static class ServiceCollectionExtension
         ConfigurationManager configuration
     )
     {
-        services.AddControllers(options => options.ModelBinderProviders.Insert(0, new ModelBinderProvider()));
+        services.AddControllers(options =>
+        {
+            var provider = services
+         .BuildServiceProvider()
+         .GetRequiredService<IModelBinderProvider>();
+
+            options.ModelBinderProviders.Insert(0, provider);
+        });
         services.AddEndpointsApiExplorer();
         services.AddSwagerUi();
         services.AddAuthorization();
@@ -30,12 +40,20 @@ internal static class ServiceCollectionExtension
         {
             clientBuilder.UseCredential(new DefaultAzureCredential());
         });
-        AddAuthDbContext(services, configuration);
+        services.AddAuthDbContext(configuration);
         services.AddApiVersioning();
         services.AddJwtAuthentication(configuration);
         services.AddAutoMapper(typeof(PatientMappingProfile));
         services.AddHttpClient();
         services.AddPatientServices();
+        services.AddModelBinder();
+    }
+
+    private static void AddModelBinder(this IServiceCollection services)
+    {
+        services.AddTransient<IPropertySetChecker<UpdatePatientRequestDto>, UpdatePatientDtoPropertyChecker>();
+        services.AddSingleton<IModelBinderProvider>(sp =>
+            new GenericModelBinderProvider<UpdatePatientRequestDto>(sp));
     }
 
     private static void AddSwagerUi(this IServiceCollection services)
@@ -70,7 +88,7 @@ internal static class ServiceCollectionExtension
         });
     }
 
-    private static void AddAuthDbContext(IServiceCollection services, ConfigurationManager configuration)
+    private static void AddAuthDbContext(this IServiceCollection services, ConfigurationManager configuration)
     {
         var keyVaultUri = configuration["KeyVault:VaultUri"]
                 ?? Environment.GetEnvironmentVariable("KeyVault:VaultUri")
