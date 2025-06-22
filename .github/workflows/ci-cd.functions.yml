@@ -44,7 +44,7 @@ jobs:
       uses: Azure/functions-action@v1
       with:
         app-name: healthcare-functions
-        package: ./publish
+        package: ./HealthcareSystem/publish
         credentials: ${{ secrets.AZURE_CREDENTIALS }}
         app-settings: |
           WEBSITE_RUN_FROM_PACKAGE=1
