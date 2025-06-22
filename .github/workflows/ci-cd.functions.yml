@@ -45,11 +45,13 @@ jobs:
       with:
         app-name: healthcare-functions
         package: ./publish
-        credentials: ${{ secrets.AZURE_CREDENTIALS }}
+        publish-profile: ${{ secrets.AZURE_FUNCTIONS_PUBLISH_PROFILE }}
+        respect-pom-file: false
+        respect-funcignore: true
         app-settings: |
           ASPNETCORE_ENVIRONMENT=Development
-          KeyVault__VaultUri: "https://healthcare-vault.vault.azure.net/"
-          ConnectionStrings__SqlConnection: "secret://healthcare-vault/SqlConnection"
+          KeyVault__VaultUri=https://healthcare-vault.vault.azure.net/
+          ConnectionStrings__SqlConnection=secret://healthcare-vault/SqlConnection
           EventHubConnection=secret://healthcare-vault/EventHubConnection
           AzureBlobConnection=secret://healthcare-vault/AzureBlobConnection
           APPLICATIONINSIGHTS_CONNECTION_STRING=secret://healthcare-vault/AppInsightsConnection
