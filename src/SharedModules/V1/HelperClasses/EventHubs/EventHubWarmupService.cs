@@ -18,16 +18,18 @@ public class EventHubWarmupService(IEventHubClientFactory _factory) : IHostedSer
         return _clients[eventName];
     }
 
-    public async Task StartAsync(CancellationToken cancellationToken)
+    public Task StartAsync(CancellationToken cancellationToken)
     {
         // Support multiple event hubs Producer Clients.
         var requiredEvents = new[] { EventNames.MediaDeleted, EventNames.AppointmentScheduled };
 
         foreach (var eventName in requiredEvents)
         {
-            var client = await _factory.CreateAsync(eventName);
+            var client = _factory.Create(eventName);
             _clients[eventName] = client;
         }
+
+        return Task.CompletedTask;
     }
 
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;

@@ -8,7 +8,7 @@ namespace appointment.repositories.V1.RepositoryImpl;
 public class AppointmentRepository : IAppointmentRepository
 {
     private readonly AppointmentDbContext _context;
-
+    private readonly int _appointmentSlotDurationMinutes = 60;
     public AppointmentRepository(AppointmentDbContext context)
     {
         _context = context;
@@ -51,9 +51,13 @@ public class AppointmentRepository : IAppointmentRepository
 
     public async Task<bool> IsDoctorAvailableAsync(int doctorId, DateTime appointmentDateTime, int? excludeAppointmentId = null, CancellationToken cancellationToken = default)
     {
-        var slotDuration = TimeSpan.FromMinutes(30);
+        var slotDuration = TimeSpan.FromMinutes(_appointmentSlotDurationMinutes);
         var startTime = appointmentDateTime;
         var endTime = appointmentDateTime.Add(slotDuration);
+
+        var slot = await GetDoctorSlotAvailabilityAsync(doctorId, appointmentDateTime.Date, cancellationToken);
+        if (slot != null && slot.SlotStatus == "Full")
+            return false;
 
         return !await _context.Appointments
             .Where(a => a.DoctorId == doctorId
@@ -62,6 +66,32 @@ public class AppointmentRepository : IAppointmentRepository
                 && a.AppointmentDateTime.Add(slotDuration) > startTime
                 && (!excludeAppointmentId.HasValue || a.AppointmentId != excludeAppointmentId.Value))
             .AnyAsync(cancellationToken);
+    }
+
+
+    public async Task<DoctorSlotAvailability?> GetDoctorSlotAvailabilityAsync(int doctorId, DateTime slotDate, CancellationToken cancellationToken = default)
+    {
+        return await _context.DoctorSlotAvailabilities
+            .FirstOrDefaultAsync(s => s.DoctorId == doctorId && s.SlotDate == slotDate.Date, cancellationToken);
+    }
+
+    public async Task AddOrUpdateDoctorSlotAvailabilityAsync(DoctorSlotAvailability slot, CancellationToken cancellationToken = default)
+    {
+        var existingSlot = await _context.DoctorSlotAvailabilities
+            .FirstOrDefaultAsync(s => s.DoctorId == slot.DoctorId && s.SlotDate == slot.SlotDate.Date, cancellationToken);
+
+        if (existingSlot == null)
+        {
+            _context.DoctorSlotAvailabilities.Add(slot);
+        }
+        else
+        {
+            existingSlot.AppointmentCount = slot.AppointmentCount;
+            existingSlot.SlotStatus = slot.SlotStatus;
+            _context.Entry(existingSlot).Property(e => e.RowVersion).OriginalValue = slot.RowVersion;
+        }
+
+        await _context.SaveChangesAsync(cancellationToken);
     }
 
     public void Remove(Appointment appointment)

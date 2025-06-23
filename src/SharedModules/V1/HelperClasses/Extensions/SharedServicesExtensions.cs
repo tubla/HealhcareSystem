@@ -10,7 +10,7 @@ public static class SharedServicesExtensions
 {
     public static void AddSharedServices(this IServiceCollection services)
     {
-        //services.AddScoped<ISecretClient, HealthcareSecretClient>();
+
         services.AddScoped<IAppointmentServiceProxy, AppointmentServiceProxy>();
         services.AddScoped<IAuthServiceProxy, AuthServiceProxy>();
         services.AddScoped<IDoctorServiceProxy, DoctorServiceProxy>();
@@ -31,6 +31,10 @@ public static class SharedServicesExtensions
         services.AddSingleton<BlobServiceWarmupService>();
         services.AddSingleton<IBlobServiceClientProvider>(sp => sp.GetRequiredService<BlobServiceWarmupService>());
         services.AddHostedService(sp => sp.GetRequiredService<BlobServiceWarmupService>());
+
+        // SignalR setup
+        // services.AddSharedSignalR(); -> Add this in the respective where SignalR service
+        // is required but after calling services.AddSharedServices();
 
         services.AddHttpContextAccessor();
     }

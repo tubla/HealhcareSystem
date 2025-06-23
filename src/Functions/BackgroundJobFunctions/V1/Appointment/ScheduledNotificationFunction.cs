@@ -10,7 +10,7 @@ using System.Text.Json;
 
 namespace BackgroundJobFunctions.V1.Appointment
 {
-    public class ScheduledNotificationFunction(IEmailClient _emailClient, ISecretClient _secretClient, ILogger<ScheduledNotificationFunction> _logger)
+    public class ScheduledNotificationFunction(IEmailClient _emailClient, ISecretProvider _secretProvider, ILogger<ScheduledNotificationFunction> _logger)
     {
         [FunctionName("ScheduledNotificationFunction")]
         public async Task RunScheduled(
@@ -35,7 +35,7 @@ namespace BackgroundJobFunctions.V1.Appointment
                         $"Processing scheduled appointment {appointmentEvent.AppointmentId} for patient {appointmentEvent.PatientId}"
                     );
 
-                    var sqlConnectionString = await _secretClient.GetSecretValueAsync("SqlConnection");
+                    var sqlConnectionString = _secretProvider.GetSecret("SqlConnection");
                     using var connection = new SqlConnection(sqlConnectionString);
                     await connection.OpenAsync();
                     var query = $"SELECT email FROM [healthcare].[patient] WHERE patient_id=@id)";

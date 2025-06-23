@@ -7,7 +7,9 @@ public interface IAppointmentService
 {
     Task<Response<AppointmentResponseDto>> CreateAppointmentAsync(CreateAppointmentRequestDto dto, int userId, CancellationToken cancellationToken = default);
     Task<Response<AppointmentResponseDto>> GetAppointmentAsync(int id, int userId, CancellationToken cancellationToken = default);
-    Task<Response<AppointmentResponseDto>> GetDoctorAppointmentAsync(int doctorId, int userId, CancellationToken cancellationToken = default);
+    Task<bool> CheckAppointmentExistsAsync(int id, int userId, CancellationToken cancellationToken = default);
+
+    Task<bool> CheckDoctorHasAppointmentsAsync(int doctorId, int userId, CancellationToken cancellationToken = default);
     Task<Response<IEnumerable<AppointmentResponseDto>>> GetDoctorAppointmentsByDateAsync(
         int doctorId,
         DateTime date,

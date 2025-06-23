@@ -11,4 +11,6 @@ public interface IAppointmentRepository
     Task AddAsync(Appointment appointment, CancellationToken cancellationToken = default);
     void Remove(Appointment appointment);
     Task<bool> IsDoctorAvailableAsync(int doctorId, DateTime appointmentDateTime, int? excludeAppointmentId = null, CancellationToken cancellationToken = default);
+    Task<DoctorSlotAvailability?> GetDoctorSlotAvailabilityAsync(int doctorId, DateTime slotDate, CancellationToken cancellationToken = default);
+    Task AddOrUpdateDoctorSlotAvailabilityAsync(DoctorSlotAvailability slot, CancellationToken cancellationToken = default);
 }

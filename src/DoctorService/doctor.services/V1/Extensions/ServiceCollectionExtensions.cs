@@ -21,6 +21,5 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IAppointmentServiceProxyInternal, AppointmentServiceProxyInternal>();
         services.AddScoped<IDepartmentServiceProxy, DepartmentServiceProxy>();
         services.AddScoped<IExceptionHandlerStrategy, DoctorExceptionStrategy>();
-        services.AddMemoryCache();
     }
 }

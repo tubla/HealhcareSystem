@@ -1,5 +1,4 @@
 ﻿using Azure.Identity;
-using Azure.Security.KeyVault.Secrets;
 using media.repositories.V1.Context;
 using media.services.V1.Extensions;
 using media.services.V1.Mappings;
@@ -8,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Azure;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using shared.V1.HelperClasses.Contracts;
 using System.Text;
 
 namespace media.api.V1.Extensions;
@@ -16,6 +16,7 @@ internal static class ServiceCollectionExtension
 {
     internal static void AddServiceCollection(
         this IServiceCollection services,
+        ISecretProvider secretProvider,
         ConfigurationManager configuration
     )
     {
@@ -28,12 +29,12 @@ internal static class ServiceCollectionExtension
         {
             clientBuilder.UseCredential(new DefaultAzureCredential());
         });
-        AddAuthDbContext(services, configuration);
+        services.AddMediaDbContext(secretProvider, configuration);
         services.AddApiVersioning();
-        services.AddJwtAuthentication(configuration);
+        services.AddJwtAuthentication(secretProvider, configuration);
         services.AddAutoMapper(typeof(MediaMappingProfile));
         services.AddHttpClient();
-        services.AddMediaServices(configuration);
+        services.AddMediaServices();
     }
 
     private static void AddSwagerUi(this IServiceCollection services)
@@ -68,13 +69,9 @@ internal static class ServiceCollectionExtension
         });
     }
 
-    private static void AddAuthDbContext(IServiceCollection services, ConfigurationManager configuration)
+    private static void AddMediaDbContext(this IServiceCollection services, ISecretProvider secretProvider, ConfigurationManager configuration)
     {
-        var keyVaultUri = configuration["KeyVault:VaultUri"]
-                ?? Environment.GetEnvironmentVariable("KeyVault:VaultUri")
-                ?? "https://healthcare-vault.vault.azure.net/";
-        var secretClient = new SecretClient(new Uri(keyVaultUri), new DefaultAzureCredential());
-        var sqlConnectionString = secretClient.GetSecret("SqlConnection").Value.Value;
+        var sqlConnectionString = secretProvider.GetSecret("SqlConnection");
         services.AddDbContext<MediaDbContext>(options =>
                     options.UseSqlServer(sqlConnectionString)
                     .UseSnakeCaseNamingConvention()
@@ -100,6 +97,7 @@ internal static class ServiceCollectionExtension
 
     private static void AddJwtAuthentication(
         this IServiceCollection services,
+        ISecretProvider secretProvider,
         ConfigurationManager configuration
     )
     {
@@ -116,7 +114,7 @@ internal static class ServiceCollectionExtension
                     ValidIssuer = configuration["Jwt:Issuer"],
                     ValidAudience = configuration["Jwt:Audience"],
                     IssuerSigningKey = new SymmetricSecurityKey(
-                        Encoding.UTF8.GetBytes(configuration["Jwt:Key"]!)
+                        Encoding.UTF8.GetBytes(secretProvider.GetSecret("JwtKey")!)
                     ),
                 };
             });

@@ -16,6 +16,5 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<IDepartmentRepository, DepartmentRepositoryImpl>();
         services.AddScoped<IExceptionHandlerStrategy, DepartmentExceptionStrategy>();
-        services.AddMemoryCache();
     }
 }

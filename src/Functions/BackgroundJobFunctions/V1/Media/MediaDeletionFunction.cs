@@ -13,7 +13,6 @@ namespace BackgroundJobFunctions.V1.Media;
 
 public class MediaDeletionFunction(IBlobServiceClientProvider _blobClientProvider,
         IConfiguration _configuration,
-        ISecretClient _secretClient,
         ILogger<MediaDeletionFunction> _logger)
 {
     private readonly BlobServiceClient _blobServiceClient = _blobClientProvider.Client;
@@ -40,7 +39,7 @@ public class MediaDeletionFunction(IBlobServiceClientProvider _blobClientProvide
 
                 var containerName = _configuration["AzureBlobStorage:ContainerName"]; // from configuration -> check Program.cs
 
-                var sqlConnectionString = await _secretClient.GetSecretValueAsync("SqlConnection");
+                var sqlConnectionString = _configuration["SqlConnection"]; // from configuration -> check Program.cs
                 using var connection = new SqlConnection(sqlConnectionString);
                 await connection.OpenAsync();
 

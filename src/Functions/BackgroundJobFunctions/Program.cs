@@ -3,30 +3,23 @@ using BackgroundJobFunctions.V1.Contracts;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using shared.V1.HelperClasses.Contracts;
 using shared.V1.HelperClasses.Extensions;
+using shared.V1.HelperClasses.SecretClientHelper;
 
 var builder = new HostApplicationBuilder(args);
+var secretProvider = await builder.Services.AddSharedSecretsAsync(builder.Configuration);
 
-// Add shared services temporarily so we can resolve ISecretClient
-var tempServices = new ServiceCollection();
-tempServices.AddSharedServices(); // This includes HealthcareSecretClient
-
-var tempProvider = tempServices.BuildServiceProvider();
-var secretClient = tempProvider.GetRequiredService<ISecretClient>();
-
-// Load secrets synchronously at startup and inject them into configuration
-var eventHubConn = secretClient.GetSecretValueAsync("EventHubConnection").GetAwaiter().GetResult();
+var eventHubConn = secretProvider.GetSecret("EventHubConnection");
+var sqlConn = secretProvider.GetSecret("SqlConnection");
 
 builder.Configuration.AddInMemoryCollection(new Dictionary<string, string>
 {
-    { "EventHubConnection", eventHubConn },
+    { "EventHubConnection", eventHubConn! },
+    { "SqlConnection", sqlConn!},
     { "AzureBlobStorage:ContainerName", "media" }
 }!);
 
-// Register real services for the app, now that config is complete
-builder.Services.AddMemoryCache();
-builder.Services.AddSharedServices(); // Registers HealthcareSecretClient, warmup services, etc.
+builder.Services.AddSharedServices();
 builder.Services.AddScoped<IEmailClient, AzureCommunicationEmailClient>();
 
 builder.Build().Run();

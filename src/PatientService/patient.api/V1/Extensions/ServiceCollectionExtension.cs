@@ -1,5 +1,4 @@
 ﻿using Azure.Identity;
-using Azure.Security.KeyVault.Secrets;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
@@ -12,6 +11,7 @@ using patient.models.V1.Dto;
 using patient.repositories.V1.Context;
 using patient.services.V1.Extensions;
 using patient.services.V1.Mapping;
+using shared.V1.HelperClasses.Contracts;
 using shared.V1.ModelBinders;
 using System.Text;
 
@@ -21,6 +21,7 @@ internal static class ServiceCollectionExtension
 {
     internal static void AddServiceCollection(
         this IServiceCollection services,
+        ISecretProvider secretProvider,
         ConfigurationManager configuration
     )
     {
@@ -40,9 +41,9 @@ internal static class ServiceCollectionExtension
         {
             clientBuilder.UseCredential(new DefaultAzureCredential());
         });
-        services.AddAuthDbContext(configuration);
+        services.AddPatientDbContext(secretProvider, configuration);
         services.AddApiVersioning();
-        services.AddJwtAuthentication(configuration);
+        services.AddJwtAuthentication(secretProvider, configuration);
         services.AddAutoMapper(typeof(PatientMappingProfile));
         services.AddHttpClient();
         services.AddPatientServices();
@@ -88,13 +89,9 @@ internal static class ServiceCollectionExtension
         });
     }
 
-    private static void AddAuthDbContext(this IServiceCollection services, ConfigurationManager configuration)
+    private static void AddPatientDbContext(this IServiceCollection services, ISecretProvider secretProvider, ConfigurationManager configuration)
     {
-        var keyVaultUri = configuration["KeyVault:VaultUri"]
-                ?? Environment.GetEnvironmentVariable("KeyVault:VaultUri")
-                ?? "https://healthcare-vault.vault.azure.net/";
-        var secretClient = new SecretClient(new Uri(keyVaultUri), new DefaultAzureCredential());
-        var sqlConnectionString = secretClient.GetSecret("SqlConnection").Value.Value;
+        var sqlConnectionString = secretProvider.GetSecret("SqlConnection");
         services.AddDbContext<PatientDbContext>(options =>
                     options.UseSqlServer(sqlConnectionString)
                     .UseSnakeCaseNamingConvention()
@@ -120,6 +117,7 @@ internal static class ServiceCollectionExtension
 
     private static void AddJwtAuthentication(
         this IServiceCollection services,
+        ISecretProvider secretProvider,
         ConfigurationManager configuration
     )
     {
@@ -136,7 +134,7 @@ internal static class ServiceCollectionExtension
                     ValidIssuer = configuration["Jwt:Issuer"],
                     ValidAudience = configuration["Jwt:Audience"],
                     IssuerSigningKey = new SymmetricSecurityKey(
-                        Encoding.UTF8.GetBytes(configuration["Jwt:Key"]!)
+                        Encoding.UTF8.GetBytes(secretProvider.GetSecret("JwtKey")!)
                     ),
                 };
             });

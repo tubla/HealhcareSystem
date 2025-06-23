@@ -4,6 +4,7 @@ using patient.models.V1.Db;
 using patient.models.V1.Dto;
 using patient.repositories.V1.Contracts;
 using patient.services.V1.Contracts;
+using patient.services.V1.Exceptions;
 using shared.V1.HelperClasses;
 using shared.V1.HelperClasses.Contracts;
 using shared.V1.Models;
@@ -99,6 +100,15 @@ public class PatientService(
         });
 
         return Response<PatientResponseDto>.Ok(patientDto);
+    }
+
+    public async Task<bool> CheckPatientExistsAsync(int id, int userId, CancellationToken cancellationToken = default)
+    {
+        if (!await _authServiceProxy.CheckPermissionAsync(userId, RbacPermissions.ReadPatient, cancellationToken))
+            throw new PatientAccessPermissionException("Permission denied");
+
+        var patient = await _unitOfWork.PatientRepository.GetByIdAsync(id, cancellationToken);
+        return patient != null;
     }
 
     public async Task<Response<PatientResponseDto>> UpdateAsync(int id, UpdatePatientRequestDto dto, int userId, CancellationToken cancellationToken = default)

@@ -54,10 +54,10 @@ public class PatientsController(IPatientService _patientService) : ControllerBas
     }
 
     [HttpPost("check-patient-exists")]
-    public async Task<ActionResult<Response<PatientResponseDto>>> CheckPatientExists(CheckPatientExistenceRequestDto dto, CancellationToken cancellationToken = default)
+    public async Task<ActionResult<bool>> CheckPatientExists(CheckPatientExistenceRequestDto dto, CancellationToken cancellationToken = default)
     {
         var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
-        var response = await _patientService.GetByIdAsync(dto.PatientId, userId, cancellationToken);
-        return response.Success ? Ok(response) : StatusCode(response.StatusCode, response);
+        var response = await _patientService.CheckPatientExistsAsync(dto.PatientId, userId, cancellationToken);
+        return Ok(response);
     }
 }

@@ -9,6 +9,7 @@ namespace patient.services.V1.Contracts
         Task<Response<bool>> DeleteAsync(int id, int userId, CancellationToken cancellationToken = default);
         Task<Response<IEnumerable<AppointmentResponseDto>>> GetAppointmentsAsync(int patientId, int userId, CancellationToken cancellationToken = default);
         Task<Response<PatientResponseDto>> GetByIdAsync(int id, int userId, CancellationToken cancellationToken = default);
+        Task<bool> CheckPatientExistsAsync(int id, int userId, CancellationToken cancellationToken = default);
         Task<Response<PatientResponseDto>> UpdateAsync(int id, UpdatePatientRequestDto dto, int userId, CancellationToken cancellationToken = default);
     }
 }

@@ -30,8 +30,8 @@ public class DoctorAppointmentController(IAppointmentService _appointmentService
     public async Task<ActionResult<bool>> CheckDoctorAppointmentExists([FromBody] CheckDoctorAppointmentRequestDto dto, CancellationToken cancellationToken = default)
     {
         var userId = GetUserId();
-        var response = await _appointmentService.GetDoctorAppointmentAsync(dto.DoctorId, userId, cancellationToken);
-        return Ok(Response<bool>.Ok(response.Success));
+        var response = await _appointmentService.CheckDoctorHasAppointmentsAsync(dto.DoctorId, userId, cancellationToken);
+        return Ok(response);
     }
 
     private int GetUserId()

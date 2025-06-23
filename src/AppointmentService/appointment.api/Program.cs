@@ -1,22 +1,33 @@
-using appointment.api.V1.Extensions;
+﻿using appointment.api.V1.Extensions;
 using shared.V1.HelperClasses.Extensions;
+using shared.V1.HelperClasses.Hubs;
+using shared.V1.HelperClasses.SecretClientHelper;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container..
-var tempLoggerFactory = LoggerFactory.Create(builder =>
+var loggerFactory = LoggerFactory.Create(logging =>
 {
-    builder
-        .AddConsole()
-        .SetMinimumLevel(LogLevel.Information);
+    logging.AddConsole().SetMinimumLevel(LogLevel.Information);
+});
+var logger = loggerFactory.CreateLogger("AppConfigurationExtension");
+
+// Preload secrets and get the actual IMemoryCache instance
+var secretProvider = await builder.Services.AddSharedSecretsAsync(builder.Configuration);
+
+// Use the secret for Azure App Configuration
+builder.Configuration.AddAzureAppConfigurationWithSecrets(secretProvider, logger);
+
+// Now register additional services
+builder.Services.AddServiceCollection(secretProvider, builder.Configuration);
+
+// Build the app — now services are wired correctly
+var app = builder.Build();
+
+
+// Use middlewares and run
+app.UseApplicationMiddlewares(null, ps =>
+{
+    ps.MapHub<AppointmentHub>("/appointmentHub");
 });
 
-var logger = tempLoggerFactory.CreateLogger("AppConfigurationExtension");
-
-// Load configuration from Azure App Configuration with Key Vault secrets
-builder.Configuration.AddAzureAppConfigurationWithSecrets(logger);
-
-builder.Services.AddServiceCollection(builder.Configuration);
-var app = builder.Build();
-app.UseApplicationMiddlewares();
 app.Run();

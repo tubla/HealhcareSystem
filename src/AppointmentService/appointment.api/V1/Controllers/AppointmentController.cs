@@ -72,8 +72,8 @@ public class AppointmentController(IAppointmentService _appointmentService) : Co
     public async Task<ActionResult<bool>> CheckAppointmentExists([FromBody] CheckAppointmentRequestDto dto, CancellationToken cancellationToken = default)
     {
         var userId = GetUserId();
-        var response = await _appointmentService.GetAppointmentAsync(dto.AppointmentId, userId, cancellationToken);
-        return Ok(Response<bool>.Ok(response.Success));
+        var response = await _appointmentService.CheckAppointmentExistsAsync(dto.AppointmentId, userId, cancellationToken);
+        return Ok(response);
     }
 
     private int GetUserId()

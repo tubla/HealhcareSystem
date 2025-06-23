@@ -3,86 +3,85 @@ using BackgroundJobFunctions.V1.Contracts;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using shared.V1.Events;
-using shared.V1.HelperClasses.Contracts;
 using System.Text.Json;
 
-namespace BackgroundJobFunctions.V1.Appointment
+namespace BackgroundJobFunctions.V1.Appointment;
+
+public class CancelledNotificationFunction(IEmailClient _emailClient, IConfiguration _configuration, ILogger<CancelledNotificationFunction> _logger)
 {
-    public class CancelledNotificationFunction(IEmailClient _emailClient, ISecretClient _secretClient, ILogger<CancelledNotificationFunction> _logger)
+    [FunctionName("CancelledNotificationFunction")]
+    public async Task RunScheduled(
+         [EventHubTrigger(
+            EventNames.AppointmentScheduled,
+            Connection = "EventHubConnection", // from configuration -> check Program.cs
+            ConsumerGroup = "$Default"
+        )] EventData[] events)
     {
-        [FunctionName("CancelledNotificationFunction")]
-        public async Task RunScheduled(
-             [EventHubTrigger(
-                EventNames.AppointmentScheduled,
-                Connection = "EventHubConnection", // from configuration -> check Program.cs
-                ConsumerGroup = "$Default"
-            )] EventData[] events)
+        foreach (var eventData in events)
         {
-            foreach (var eventData in events)
+            try
             {
-                try
+                var appointmentEvent = JsonSerializer.Deserialize<AppointmentCancelledEvent>(eventData.Body.Span);
+                if (appointmentEvent == null)
                 {
-                    var appointmentEvent = JsonSerializer.Deserialize<AppointmentCancelledEvent>(eventData.Body.Span);
-                    if (appointmentEvent == null)
-                    {
-                        _logger.LogError("CancelledNotificationFunction: Received null event object after deserialization");
-                        continue;
-                    }
-
-                    _logger.LogInformation(
-                        $"Processing cancelled appointment {appointmentEvent.AppointmentId} for patient {appointmentEvent.PatientId}"
-                    );
-
-                    var sqlConnectionString = await _secretClient.GetSecretValueAsync("SqlConnection");
-                    using var connection = new SqlConnection(sqlConnectionString);
-                    await connection.OpenAsync();
-                    var query = $"SELECT email FROM [healthcare].[patient] WHERE patient_id=@id)";
-                    string email = await GetDataFromDb(query, appointmentEvent.PatientId, connection);
-
-                    if (string.IsNullOrWhiteSpace(email))
-                    {
-                        _logger.LogWarning($"No email found for patient ID {appointmentEvent.PatientId}");
-                        continue;
-                    }
-
-                    query = $"SELECT name FROM [healthcare].[doctor] WHERE doctor_id=@id)";
-                    string doctorName = await GetDataFromDb(query, appointmentEvent.DoctorId, connection);
-
-                    // Send email notification
-                    string doctorInfo = !string.IsNullOrWhiteSpace(doctorName) ? $"with Dr. {doctorName}." : string.Empty;
-                    await _emailClient.SendEmailAsync(email,
-                        "Appointment Cancelled",
-                        $"Your appointment with ID {appointmentEvent.AppointmentId} is cancelled for {appointmentEvent.AppointmentDateTime:MM/dd/yyyy HH:mm} {doctorInfo}"
-                    );
-
-                    _logger.LogInformation(
-                        $"Email sent to patient for cancelled appointment at {appointmentEvent.AppointmentDateTime}"
-                    );
+                    _logger.LogError("CancelledNotificationFunction: Received null event object after deserialization");
+                    continue;
                 }
-                catch (Exception ex)
+
+                _logger.LogInformation(
+                    $"Processing cancelled appointment {appointmentEvent.AppointmentId} for patient {appointmentEvent.PatientId}"
+                );
+
+                var sqlConnectionString = _configuration["SqlConnection"]; // from configuration -> check Program.cs
+                using var connection = new SqlConnection(sqlConnectionString);
+                await connection.OpenAsync();
+                var query = $"SELECT email FROM [healthcare].[patient] WHERE patient_id=@id)";
+                string email = await GetDataFromDb(query, appointmentEvent.PatientId, connection);
+
+                if (string.IsNullOrWhiteSpace(email))
                 {
-                    _logger.LogError($"Error processing cancelled event for Appointment : {ex.Message}");
+                    _logger.LogWarning($"No email found for patient ID {appointmentEvent.PatientId}");
+                    continue;
                 }
+
+                query = $"SELECT name FROM [healthcare].[doctor] WHERE doctor_id=@id)";
+                string doctorName = await GetDataFromDb(query, appointmentEvent.DoctorId, connection);
+
+                // Send email notification
+                string doctorInfo = !string.IsNullOrWhiteSpace(doctorName) ? $"with Dr. {doctorName}." : string.Empty;
+                await _emailClient.SendEmailAsync(email,
+                    "Appointment Cancelled",
+                    $"Your appointment with ID {appointmentEvent.AppointmentId} is cancelled for {appointmentEvent.AppointmentDateTime:MM/dd/yyyy HH:mm} {doctorInfo}"
+                );
+
+                _logger.LogInformation(
+                    $"Email sent to patient for cancelled appointment at {appointmentEvent.AppointmentDateTime}"
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error processing cancelled event for Appointment : {ex.Message}");
+            }
+        }
+    }
+
+    private static async Task<string> GetDataFromDb(string query, int parameterValue, SqlConnection connection)
+    {
+        string data = string.Empty;
+
+        using (var command = new SqlCommand(query, connection))
+        {
+            command.Parameters.AddWithValue("@id", parameterValue);
+            using var reader = await command.ExecuteReaderAsync();
+            if (await reader.ReadAsync())
+            {
+                data = reader.GetString(0);
             }
         }
 
-        private static async Task<string> GetDataFromDb(string query, int parameterValue, SqlConnection connection)
-        {
-            string data = string.Empty;
-
-            using (var command = new SqlCommand(query, connection))
-            {
-                command.Parameters.AddWithValue("@id", parameterValue);
-                using var reader = await command.ExecuteReaderAsync();
-                if (await reader.ReadAsync())
-                {
-                    data = reader.GetString(0);
-                }
-            }
-
-            return data;
-        }
+        return data;
     }
 }

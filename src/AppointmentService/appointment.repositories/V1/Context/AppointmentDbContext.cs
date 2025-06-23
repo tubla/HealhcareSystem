@@ -6,7 +6,7 @@ namespace appointment.repositories.V1.Context;
 public class AppointmentDbContext(DbContextOptions<AppointmentDbContext> options) : DbContext(options)
 {
     public DbSet<Appointment> Appointments { get; set; }
-
+    public DbSet<DoctorSlotAvailability> DoctorSlotAvailabilities { get; set; }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -40,6 +40,40 @@ public class AppointmentDbContext(DbContextOptions<AppointmentDbContext> options
             entity.Property(e => e.Notes)
                 .HasColumnName("notes")
                 .HasMaxLength(500);
+        });
+
+        modelBuilder.Entity<DoctorSlotAvailability>(entity =>
+        {
+            entity.ToTable("doctor_slot_availability", "healthcare", t => t.HasComment("Tracks doctor appointment slot availability"));
+            entity.HasKey(e => e.SlotId);
+
+            entity.Property(e => e.SlotId)
+                .HasColumnName("slot_id")
+                .ValueGeneratedOnAdd();
+
+            entity.Property(e => e.DoctorId)
+                .HasColumnName("doctor_id")
+                .IsRequired();
+
+            entity.Property(e => e.SlotDate)
+                .HasColumnName("slot_date")
+                .IsRequired();
+
+            entity.Property(e => e.AppointmentCount)
+                .HasColumnName("appointment_count")
+                .IsRequired();
+
+            entity.Property(e => e.SlotStatus)
+                .HasColumnName("slot_status")
+                .HasMaxLength(20)
+                .IsRequired();
+
+            entity.Property(e => e.RowVersion)
+                .HasColumnName("row_version")
+                .IsRowVersion();
+
+            entity.HasIndex(e => new { e.DoctorId, e.SlotDate })
+                .IsUnique();
         });
     }
 }
