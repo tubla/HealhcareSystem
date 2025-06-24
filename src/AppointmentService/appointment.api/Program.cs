@@ -11,18 +11,30 @@ var loggerFactory = LoggerFactory.Create(logging =>
 });
 var logger = loggerFactory.CreateLogger("AppConfigurationExtension");
 
-// Preload secrets and get the actual IMemoryCache instance
-var secretProvider = await builder.Services.AddSharedSecretsAsync(builder.Configuration);
+// Detect if Swagger CLI is running
+var isSwaggerGeneration = args.Contains("tofile");
 
-// Use the secret for Azure App Configuration
-builder.Configuration.AddAzureAppConfigurationWithSecrets(secretProvider, logger);
+// Conditionally skip Azure setup
+if (!isSwaggerGeneration)
+{
+    // Preload secrets and get the actual IMemoryCache instance
+    var secretProvider = await builder.Services.AddSharedSecretsAsync(builder.Configuration);
 
-// Now register additional services
-builder.Services.AddServiceCollection(secretProvider, builder.Configuration);
+    // Use the secret for Azure App Configuration
+    builder.Configuration.AddAzureAppConfigurationWithSecrets(secretProvider, logger);
 
-// Build the app — now services are wired correctly
+    // Now register additional services
+    builder.Services.AddServiceCollection(secretProvider, builder.Configuration);
+}
+else
+{
+    // Minimal service setup to satisfy app build during Swagger generation
+    builder.Services.AddControllers();
+    // (Or any other minimum needed to let app build succeed)
+}
+
+// Build the app
 var app = builder.Build();
-
 
 // Use middlewares and run
 app.UseApplicationMiddlewares(null, ps =>

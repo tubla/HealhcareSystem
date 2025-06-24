@@ -45,13 +45,11 @@ jobs:
     - name: Publish
       run: dotnet publish src/AppointmentService/appointment.api/appointment.api.csproj -c Release -o ./publish --no-build
 
-    - name: Generate Swagger via minimal run
+    - name: Generate Swagger
       run: |
         dotnet tool install --global Swashbuckle.AspNetCore.Cli --version 9.0.1
         export PATH="$PATH:/home/runner/.dotnet/tools"
-        export KeyVault__VaultUri="https://dummy.vault.azure.net/"
-        export AZURE_CLIENT_ID="dummy-client-id"
-        swagger tofile --output ./publish/swagger.json ./publish/appointment.api.dll v1
+        swagger tofile --output ./publish/swagger.json ./publish/appointment.api.dll v1 --generate-swagger
 
     - name: Login to Azure
       uses: azure/login@v2
