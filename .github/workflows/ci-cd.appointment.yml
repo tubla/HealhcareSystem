@@ -107,33 +107,48 @@ jobs:
         uses: azure/CLI@v2
         with:
           inlineScript: |
-            echo "Fetching Container App FQDN..."
-            for i in {1..30}; do
-              APP_URL=$(az containerapp show \
+            echo "Checking Container App status..."
+            for i in {1..60}; do
+              STATUS=$(az containerapp show \
                 --name appointment-service \
                 --resource-group healthcare-rg \
-                --query configuration.ingress.fqdn \
+                --query properties.provisioningState \
                 --output tsv 2>/dev/null)
-              if [ -n "$APP_URL" ]; then
-                echo "Container App FQDN: $APP_URL"
-                echo "APP_URL=https://$APP_URL" >> $GITHUB_ENV
+              echo "Container App Status: $STATUS"
+              if [ "$STATUS" = "Succeeded" ]; then
+                echo "Container App provisioning succeeded"
                 break
               fi
-              echo "Waiting for Container App FQDN... (Attempt $i/30)"
+              echo "Waiting for Container App to provision... (Attempt $i/60)"
               sleep 10
             done
-            if [ -z "$APP_URL" ]; then
-              echo "Error: Failed to retrieve Container App FQDN after 30 attempts"
+            if [ "$STATUS" != "Succeeded" ]; then
+              echo "Error: Container App failed to provision after 60 attempts"
               exit 1
             fi
-            # Optional health check
-            for i in {1..10}; do
+            echo "Fetching Container App FQDN..."
+            APP_URL=$(az containerapp show \
+              --name appointment-service \
+              --resource-group healthcare-rg \
+              --query configuration.ingress.fqdn \
+              --output tsv 2>/dev/null)
+            if [ -n "$APP_URL" ]; then
+              echo "Container App FQDN: $APP_URL"
+              echo "APP_URL=https://$APP_URL" >> $GITHUB_ENV
+            else
+              echo "Error: Failed to retrieve Container App FQDN"
+              az containerapp show \
+                --name appointment-service \
+                --resource-group healthcare-rg --output json
+              exit 1
+            fi
+            for i in {1..30}; do
               if curl -f "https://$APP_URL/health" 2>/dev/null; then
-                echo "Container App health check passed"
+                echo "Container App is ready"
                 break
               fi
-              echo "Health check not available, proceeding... (Attempt $i/10)"
-              sleep 5
+              echo "Waiting for Container App... (Attempt $i/30)"
+              sleep 10
             done
 
   update-apim:
