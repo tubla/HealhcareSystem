@@ -49,7 +49,7 @@ jobs:
       run: |
         dotnet tool install --global Swashbuckle.AspNetCore.Cli --version 9.0.1
         export PATH="$PATH:/home/runner/.dotnet/tools"
-        swagger tofile --output ./publish/swagger.json ./publish/appointment.api.dll v1 --generate-swagger
+        swagger tofile --output ./publish/swagger.json ./publish/appointment.api.dll v1
 
     - name: Login to Azure
       uses: azure/login@v2
