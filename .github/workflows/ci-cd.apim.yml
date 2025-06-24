@@ -34,6 +34,9 @@ jobs:
   update-apim-swagger:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Login to Azure
         uses: azure/login@v2
         with:
@@ -47,6 +50,7 @@ jobs:
             --name ${{ inputs.serviceName }}/${{ inputs.apiVersion }}/swagger.json \
             --file swagger.json \
             --auth-mode login
+        continue-on-error: false
 
       - name: Update Swagger in APIM
         run: |
@@ -58,3 +62,4 @@ jobs:
             --specification-format OpenApi \
             --specification-path swagger.json \
             --api-type http
+        continue-on-error: false
