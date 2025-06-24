@@ -57,7 +57,7 @@ jobs:
       uses: docker/login-action@v3
       with:
         registry: ${{ secrets.ACR_REGISTRY }}
-        username: ${{ secrets.ACR_USERNAME }}
+        hierarchy: ${{ secrets.ACR_USERNAME }}
         password: ${{ secrets.ACR_PASSWORD }}
 
     - name: Build and push Docker image
@@ -115,5 +115,4 @@ jobs:
           storageAccountName: healthcarergb9d7
           apimResourceGroup: healthcare-rg
           apimServiceName: healthcare-apim
-        secrets:
-          AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+          azureCredentials: ${{ secrets.AZURE_CREDENTIALS }}
