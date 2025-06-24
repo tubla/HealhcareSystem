@@ -129,28 +129,44 @@ jobs:
                 --resource-group healthcare-rg --output json || echo "Failed to retrieve Container App details"
               exit 1
             fi
-            echo "Fetching Container App FQDN..."
-            for i in {1..30}; do
-              APP_URL=$(az containerapp show \
-                --name appointment-service \
-                --resource-group healthcare-rg \
-                --query configuration.ingress.fqdn \
-                --output tsv 2>/dev/null || echo "")
-              if [ -n "$APP_URL" ]; then
-                echo "Container App FQDN: $APP_URL"
-                echo "APP_URL=https://$APP_URL" >> $GITHUB_ENV
-                break
-              fi
-              echo "Waiting for Container App FQDN... (Attempt $i/30)"
-              sleep 10
-            done
-            if [ -z "$APP_URL" ]; then
-              echo "Error: Failed to retrieve Container App FQDN after 30 attempts"
+            echo "Verifying ingress configuration..."
+            INGRESS_ENABLED=$(az containerapp show \
+              --name appointment-service \
+              --resource-group healthcare-rg \
+              --query configuration.ingress.enabled \
+              --output tsv 2>/dev/null || echo "False")
+            echo "Ingress Enabled: $INGRESS_ENABLED"
+            if [ "$INGRESS_ENABLED" != "True" ]; then
+              echo "Error: Ingress is not enabled for the Container App"
               az containerapp show \
                 --name appointment-service \
                 --resource-group healthcare-rg --output json || echo "Failed to retrieve Container App details"
               exit 1
             fi
+            echo "Fetching Container App FQDN..."
+            for i in {1..60}; do
+              APP_URL=$(az containerapp show \
+                --name appointment-service \
+                --resource-group healthcare-rg \
+                --query configuration.ingress.fqdn \
+                --output tsv 2>/dev/null || echo "")
+              echo "Attempt $i/60 - Container App FQDN: ${APP_URL:-'Not retrieved'}"
+              if [ -n "$APP_URL" ]; then
+                echo "Container App FQDN: $APP_URL"
+                echo "APP_URL=https://$APP_URL" >> $GITHUB_ENV
+                break
+              fi
+              echo "Waiting for Container App FQDN... (Attempt $i/60)"
+              sleep 10
+            done
+            if [ -z "$APP_URL" ]; then
+              echo "Error: Failed to retrieve Container App FQDN after 60 attempts"
+              az containerapp show \
+                --name appointment-service \
+                --resource-group healthcare-rg --output json || echo "Failed to retrieve Container App details"
+              exit 1
+            fi
+            echo "Attempting health check..."
             for i in {1..30}; do
               if curl -f "https://$APP_URL/health" 2>/dev/null; then
                 echo "Container App is ready"
