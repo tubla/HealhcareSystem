@@ -49,6 +49,8 @@ jobs:
       run: |
         dotnet tool install --global Swashbuckle.AspNetCore.Cli --version 9.0.1
         export PATH="$PATH:/home/runner/.dotnet/tools"
+        export KeyVault__VaultUri="https://dummy.vault.azure.net/"
+        export AZURE_CLIENT_ID="dummy-client-id"
         swagger tofile --output ./publish/swagger.json ./publish/appointment.api.dll v1
 
     - name: Login to Azure
