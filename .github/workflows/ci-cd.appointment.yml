@@ -46,7 +46,9 @@ jobs:
       run: dotnet publish src/AppointmentService/appointment.api/appointment.api.csproj -c Release -o ./publish --no-build
 
     - name: Generate Swagger
-      run: dotnet tool run swashbuckle tofile --output ../../publish/swagger.json ../../publish/appointment.api.dll v1
+      run: |
+        chmod +x .config/dotnet-tools/.store/swashbuckle.aspnetcore.cli/*/*/tools/net*/any/swashbuckle
+        .config/dotnet-tools/.store/swashbuckle.aspnetcore.cli/*/*/tools/net*/any/swashbuckle tofile --output ../../publish/swagger.json ../../publish/appointment.api.dll v1
       working-directory: src/AppointmentService
 
     - name: Login to Azure
