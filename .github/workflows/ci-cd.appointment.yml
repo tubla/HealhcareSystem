@@ -43,7 +43,7 @@ jobs:
       run: dotnet publish src/AppointmentService/appointment.api/appointment.api.csproj -c Release -o ./publish --no-build
 
     - name: Generate Swagger
-      run: dotnet tool run dotnet-swagger tofile --output ./publish/swagger.json ./publish/appointment.api.dll v1
+      run: dotnet tool run swagger tofile --output ./publish/swagger.json ./publish/appointment.api.dll v1
       working-directory: src/AppointmentService
 
     - name: Login to Azure
