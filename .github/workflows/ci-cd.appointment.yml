@@ -25,13 +25,10 @@ jobs:
       with:
         dotnet-version: '8.0.x'
 
-    - name: Create .NET tool manifest
-      run: dotnet new tool-manifest
-      working-directory: src/AppointmentService
-
-    - name: Install Swashbuckle CLI
-      run: dotnet tool install Swashbuckle.AspNetCore.Cli --version 9.0.1
-      working-directory: src/AppointmentService
+    - name: Install Swashbuckle CLI globally
+      run: |
+        dotnet tool install --global Swashbuckle.AspNetCore.Cli --version 9.0.1
+        echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
 
     - name: Add dotnet tools to PATH
       run: echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
@@ -46,10 +43,7 @@ jobs:
       run: dotnet publish src/AppointmentService/appointment.api/appointment.api.csproj -c Release -o ./publish --no-build
 
     - name: Generate Swagger
-      run: |
-        chmod +x .config/dotnet-tools/.store/swashbuckle.aspnetcore.cli/*/*/tools/net*/any/swashbuckle
-        .config/dotnet-tools/.store/swashbuckle.aspnetcore.cli/*/*/tools/net*/any/swashbuckle tofile --output ../../publish/swagger.json ../../publish/appointment.api.dll v1
-      working-directory: src/AppointmentService
+      run: swashbuckle tofile --output ./publish/swagger.json ./publish/appointment.api.dll v1
 
     - name: Login to Azure
       uses: azure/login@v2
