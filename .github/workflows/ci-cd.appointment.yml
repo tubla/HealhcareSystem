@@ -25,6 +25,14 @@ jobs:
       with:
         dotnet-version: '8.0.x'
 
+    - name: Create .NET tool manifest
+      run: dotnet new tool-manifest
+      working-directory: src/AppointmentService
+
+    - name: Install Swashbuckle CLI
+      run: dotnet tool install Swashbuckle.AspNetCore.Cli --version 9.0.1
+      working-directory: src/AppointmentService
+
     - name: Restore dependencies
       run: dotnet restore src/AppointmentService/appointment.api/appointment.api.csproj
 
@@ -34,10 +42,9 @@ jobs:
     - name: Publish
       run: dotnet publish src/AppointmentService/appointment.api/appointment.api.csproj -c Release -o ./publish --no-build
 
-    - name: Install Swashbuckle CLI locally
-      run: |
-        dotnet tool restore
-        dotnet tool run dotnet-swagger tofile --output ./publish/swagger.json ./publish/appointment.api.dll v1
+    - name: Generate Swagger
+      run: dotnet tool run dotnet-swagger tofile --output ./publish/swagger.json ./publish/appointment.api.dll v1
+      working-directory: src/AppointmentService
 
     - name: Login to Azure
       uses: azure/login@v2
