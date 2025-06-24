@@ -29,7 +29,7 @@ jobs:
       run: dotnet new tool-manifest
       working-directory: src/AppointmentService
 
-    - name: Install Swashbuckle CLI
+    - name: Install Swashbuckle CLI globally
       run: dotnet tool install --global Swashbuckle.AspNetCore.Cli --version 9.0.1
 
     - name: Add dotnet tools to PATH
