@@ -102,6 +102,12 @@ jobs:
                 "ASPNETCORE_ENVIRONMENT=Development" \
                 "AZURE_CLIENT_ID=${{ secrets.AZURE_CLIENT_ID }}" \
                 "KeyVault__VaultUri=https://healthcare-vault.vault.azure.net/"
+            az containerapp ingress enable \
+              --name appointment-service \
+              --resource-group healthcare-rg \
+              --type external \
+              --target-port 8080 \
+              --transport auto
 
       - name: Wait for Container App to be Ready
         uses: azure/CLI@v2
@@ -144,23 +150,23 @@ jobs:
               exit 1
             fi
             echo "Fetching Container App FQDN..."
-            for i in {1..60}; do
+            for i in {1..30}; do
               APP_URL=$(az containerapp show \
                 --name appointment-service \
                 --resource-group healthcare-rg \
                 --query configuration.ingress.fqdn \
                 --output tsv 2>/dev/null || echo "")
-              echo "Attempt $i/60 - Container App FQDN: ${APP_URL:-'Not retrieved'}"
+              echo "Attempt $i/30 - Container App FQDN: ${APP_URL:-'Not retrieved'}"
               if [ -n "$APP_URL" ]; then
                 echo "Container App FQDN: $APP_URL"
                 echo "APP_URL=https://$APP_URL" >> $GITHUB_ENV
                 break
               fi
-              echo "Waiting for Container App FQDN... (Attempt $i/60)"
+              echo "Waiting for Container App FQDN... (Attempt $i/30)"
               sleep 10
             done
             if [ -z "$APP_URL" ]; then
-              echo "Error: Failed to retrieve Container App FQDN after 60 attempts"
+              echo "Error: Failed to retrieve Container App FQDN after 30 attempts"
               az containerapp show \
                 --name appointment-service \
                 --resource-group healthcare-rg --output json || echo "Failed to retrieve Container App details"
