@@ -7,7 +7,8 @@
 	<UserSecretsId>44239d21-e1b2-44b2-a30a-a11b1d5f418a</UserSecretsId>
 	<DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
 	<DockerfileContext>..\..\..</DockerfileContext>
-	<NoWarn>ASP0000</NoWarn>
+	<GenerateDocumentationFile>true</GenerateDocumentationFile>
+	<NoWarn>ASP0000,CS1591</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

@@ -1,0 +1,60 @@
+name: Update APIM Swagger
+
+on:
+  workflow_call:
+    inputs:
+      serviceName:
+        required: true
+        type: string
+      apiVersion:
+        required: false
+        type: string
+        default: 'v1'
+      swaggerBlobPath:
+        required: false
+        type: string
+        default: 'swagger-artifacts/${{ inputs.serviceName }}/${{ inputs.apiVersion }}/swagger.json'
+      storageAccountName:
+        required: false
+        type: string
+        default: 'healthcarergb9d7'
+      apimResourceGroup:
+        required: false
+        type: string
+        default: 'healthcare-rg'
+      apimServiceName:
+        required: false
+        type: string
+        default: 'healthcare-apim'
+    secrets:
+      AZURE_CREDENTIALS:
+        required: true
+
+jobs:
+  update-apim-swagger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Download Swagger from Blob Storage
+        run: |
+          az storage blob download \
+            --account-name ${{ inputs.storageAccountName }} \
+            --container-name swagger-artifacts \
+            --name ${{ inputs.serviceName }}/${{ inputs.apiVersion }}/swagger.json \
+            --file swagger.json \
+            --auth-mode login
+
+      - name: Update Swagger in APIM
+        run: |
+          az apim api import \
+            --resource-group ${{ inputs.apimResourceGroup }} \
+            --service-name ${{ inputs.apimServiceName }} \
+            --api-id ${{ inputs.serviceName }}-${{ inputs.apiVersion }} \
+            --path /${{ inputs.serviceName }}/${{ inputs.apiVersion }} \
+            --specification-format OpenApi \
+            --specification-path swagger.json \
+            --api-type http

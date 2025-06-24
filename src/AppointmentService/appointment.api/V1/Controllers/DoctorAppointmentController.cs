@@ -26,6 +26,7 @@ public class DoctorAppointmentController(IAppointmentService _appointmentService
         return response.Success ? Ok(response) : BadRequest(response);
     }
 
+
     [HttpPost("check-doctor-appointment-exists")]
     public async Task<ActionResult<bool>> CheckDoctorAppointmentExists([FromBody] CheckDoctorAppointmentRequestDto dto, CancellationToken cancellationToken = default)
     {

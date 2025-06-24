@@ -16,7 +16,6 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -32,14 +31,31 @@ jobs:
     - name: Build
       run: dotnet build src/AppointmentService/appointment.api/appointment.api.csproj --no-restore -c Release
 
+    - name: Publish
+      run: dotnet publish src/AppointmentService/appointment.api/appointment.api.csproj -c Release -o ./publish --no-build
+
+    - name: Generate Swagger
+      run: |
+        dotnet tool install --global Swashbuckle.AspNetCore.Cli
+        dotnet swagger tofile --output ./publish/swagger.json ./publish/appointment.api.dll v1
+
     - name: Login to Azure
       uses: azure/login@v2
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
 
+    - name: Upload Swagger to Blob Storage
+      run: |
+        az storage blob upload \
+          --account-name healthcarergb9d7 \
+          --container-name swagger-artifacts \
+          --name appointment/v1/swagger.json \
+          --file ./publish/swagger.json \
+          --auth-mode login
+
     - name: Login to Azure Container Registry
       uses: docker/login-action@v3
-      with:
+      with 名: Login to Azure Container Registry
         registry: ${{ secrets.ACR_REGISTRY }}
         username: ${{ secrets.ACR_USERNAME }}
         password: ${{ secrets.ACR_PASSWORD }}
@@ -54,38 +70,50 @@ jobs:
           ${{ secrets.ACR_REGISTRY }}/appointment-service:${{ github.sha }}
           ${{ secrets.ACR_REGISTRY }}/appointment-service:latest
         platforms: linux/amd64
-    
+
     - name: Ensure Container Apps Environment Exists
-      uses: azure/CLI@v2
-      with:
-        inlineScript: |
-          az containerapp env show --name healthcare-ca-env --resource-group healthcare-rg || \
-          az containerapp env create \
-            --name healthcare-ca-env \
-            --resource-group healthcare-rg \
-            --location eastus \
-            --logs-destination none
+      run: |
+        az containerapp env show --name healthcare-ca-env --resource-group healthcare-rg || \
+        az containerapp env create \
+          --name healthcare-ca-env \
+          --resource-group healthcare-rg \
+          --location eastus \
+          --logs-destination none
 
     - name: Deploy to Azure Container App
-      uses: azure/CLI@v2
-      with:
-        inlineScript: |
-          az containerapp create \
-            --name appointment-service \
-            --resource-group healthcare-rg \
-            --environment healthcare-ca-env \
-            --image ${{ secrets.ACR_REGISTRY }}/appointment-service:${{ github.sha }} \
-            --target-port 8080 \
-            --ingress external \
-            --registry-server ${{ secrets.ACR_REGISTRY }} \
-            --registry-username ${{ secrets.ACR_USERNAME }} \
-            --registry-password ${{ secrets.ACR_PASSWORD }} \
-            --user-assigned healthcare-identity \
-            --cpu 0.5 \
-            --memory 1.0Gi \
-            --min-replicas 1 \
-            --max-replicas 3 \
-            --env-vars \
-               "ASPNETCORE_ENVIRONMENT=Development" \
-               "KeyVault__VaultUri=https://healthcare-vault.vault.azure.net/" \
-               "AZURE_CLIENT_ID=${{ secrets.AZURE_CLIENT_ID }}"
+      run: |
+        az containerapp create \
+          --name appointment-service \
+          --resource-group healthcare-rg \
+          --environment healthcare-ca-env \
+          --image ${{ secrets.ACR_REGISTRY }}/appointment-service:${{ github.sha }} \
+          --target-port 8080 \
+          --ingress external \
+          --registry-server ${{ secrets.ACR_REGISTRY }} \
+          --registry-username ${{ secrets.ACR_USERNAME }} \
+          --registry-password ${{ secrets.ACR_PASSWORD }} \
+          --user-assigned healthcare-identity \
+          --cpu 0.5 \
+          --memory 1.0Gi \
+          --min-replicas 1 \
+          --max-replicas 3 \
+          --env-vars \
+             "ASPNETCORE_ENVIRONMENT=Development" \
+             "KeyVault__VaultUri=https://healthcare-vault.vault.azure.net/" \
+             "AZURE_CLIENT_ID=${{ secrets.AZURE_CLIENT_ID }}"
+
+  update-apim:
+    runs-on: ubuntu-latest
+    needs: build-and-deploy
+    steps:
+      - name: Update APIM Swagger
+        uses: ./.github/workflows/apim.yml
+        with:
+          serviceName: appointment
+          apiVersion: v1
+          swaggerBlobPath: swagger-artifacts/appointment/v1/swagger.json
+          storageAccountName: healthcarergb9d7
+          apimResourceGroup: healthcare-rg
+          apimServiceName: healthcare-apim
+        secrets:
+          AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
