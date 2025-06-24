@@ -107,32 +107,34 @@ jobs:
         uses: azure/CLI@v2
         with:
           inlineScript: |
+            echo "Fetching Container App FQDN..."
             for i in {1..30}; do
-              if curl -f "${{ env.APP_URL }}/health" 2>/dev/null; then
-                echo "Container App is ready"
+              APP_URL=$(az containerapp show \
+                --name appointment-service \
+                --resource-group healthcare-rg \
+                --query configuration.ingress.fqdn \
+                --output tsv 2>/dev/null)
+              if [ -n "$APP_URL" ]; then
+                echo "Container App FQDN: $APP_URL"
+                echo "APP_URL=https://$APP_URL" >> $GITHUB_ENV
                 break
               fi
-              echo "Waiting for Container App... (Attempt $i/30)"
+              echo "Waiting for Container App FQDN... (Attempt $i/30)"
               sleep 10
             done
-        env:
-          APP_URL: https://$(az containerapp show \
-            --name appointment-service \
-            --resource-group healthcare-rg \
-            --query configuration.ingress.fqdn \
-            --output tsv)
-
-      - name: Get Container App URL
-        id: get-url
-        uses: azure/CLI@v2
-        with:
-          inlineScript: |
-            APP_URL=$(az containerapp show \
-              --name appointment-service \
-              --resource-group healthcare-rg \
-              --query configuration.ingress.fqdn \
-              --output tsv)
-            echo "APP_URL=https://$APP_URL" >> $GITHUB_ENV
+            if [ -z "$APP_URL" ]; then
+              echo "Error: Failed to retrieve Container App FQDN after 30 attempts"
+              exit 1
+            fi
+            # Optional health check
+            for i in {1..10}; do
+              if curl -f "https://$APP_URL/health" 2>/dev/null; then
+                echo "Container App health check passed"
+                break
+              fi
+              echo "Health check not available, proceeding... (Attempt $i/10)"
+              sleep 5
+            done
 
   update-apim:
     runs-on: ubuntu-latest
@@ -154,10 +156,10 @@ jobs:
               break
             fi
             echo "Retrying... ($i/5)"
-              if [ $i -eq 5 ]; then
-                echo "Failed to fetch Swagger JSON after 5 attempts"
-                exit 1
-              fi
+            if [ $i -eq 5 ]; then
+              echo "Failed to fetch Swagger JSON after 5 attempts"
+              exit 1
+            fi
             sleep 5
           done
         env:

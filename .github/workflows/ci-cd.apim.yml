@@ -43,14 +43,15 @@ jobs:
           creds: ${{ inputs.azureCredentials }}
 
       - name: Download Swagger from Blob Storage
-        run: |
-          az storage blob download \
-            --account-name ${{ inputs.storageAccountName }} \
-            --container-name swagger-artifacts \
-            --name ${{ inputs.serviceName }}/${{ inputs.apiVersion }}/swagger.json \
-            --file swagger.json \
-            --auth-mode login
-        continue-on-error: false
+        uses: azure/CLI@v2
+        with:
+          inlineScript: |
+            az storage blob download \
+              --account-name ${{ inputs.storageAccountName }} \
+              --container-name swagger-artifacts \
+              --name ${{ inputs.serviceName }}/${{ inputs.apiVersion }}/swagger.json \
+              --file swagger.json \
+              --auth-mode login
 
       - name: Validate Swagger JSON
         run: |
@@ -58,14 +59,15 @@ jobs:
           echo "Swagger JSON is valid"
 
       - name: Update Swagger in APIM
-        run: |
-          az apim api import \
-            --resource-group ${{ inputs.apimResourceGroup }} \
-            --service-name ${{ inputs.apimServiceName }} \
-            --api-id ${{ inputs.serviceName }}-${{ inputs.apiVersion }} \
-            --path /${{ inputs.serviceName }}/${{ inputs.apiVersion }} \
-            --specification-format OpenApi \
-            --specification-path swagger.json \
-            --api-type http
-          echo "Successfully updated APIM API for ${{ inputs.serviceName }}-${{ inputs.apiVersion }}"
-        continue-on-error: false
+        uses: azure/CLI@v2
+        with:
+          inlineScript: |
+            az apim api import \
+              --resource-group ${{ inputs.apimResourceGroup }} \
+              --service-name ${{ inputs.apimServiceName }} \
+              --api-id ${{ inputs.serviceName }}-${{ inputs.apiVersion }} \
+              --path /${{ inputs.serviceName }}/${{ inputs.apiVersion }} \
+              --specification-format OpenApi \
+              --specification-path swagger.json \
+              --api-type http
+            echo "Successfully updated APIM API for ${{ inputs.serviceName }}-${{ inputs.apiVersion }}"
