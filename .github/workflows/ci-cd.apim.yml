@@ -52,6 +52,11 @@ jobs:
             --auth-mode login
         continue-on-error: false
 
+      - name: Validate Swagger JSON
+        run: |
+          jq . swagger.json > /dev/null || { echo "Invalid Swagger JSON"; exit 1; }
+          echo "Swagger JSON is valid"
+
       - name: Update Swagger in APIM
         run: |
           az apim api import \
@@ -62,4 +67,5 @@ jobs:
             --specification-format OpenApi \
             --specification-path swagger.json \
             --api-type http
+          echo "Successfully updated APIM API for ${{ inputs.serviceName }}-${{ inputs.apiVersion }}"
         continue-on-error: false
