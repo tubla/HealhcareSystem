@@ -42,6 +42,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "FlywayMigrations", "FlywayM
 		src\FlywayMigrations\V02__SeedDataIntoHealthcareSchemas.sql = src\FlywayMigrations\V02__SeedDataIntoHealthcareSchemas.sql
 		src\FlywayMigrations\V03__CreateHealthcareSchemas.sql = src\FlywayMigrations\V03__CreateHealthcareSchemas.sql
 		src\FlywayMigrations\V04__CreateHealthcareSchema_Doctor_Slot_Availability.sql = src\FlywayMigrations\V04__CreateHealthcareSchema_Doctor_Slot_Availability.sql
+		src\FlywayMigrations\V05__Seed_Doctor_Slot_Availability.sql = src\FlywayMigrations\V05__Seed_Doctor_Slot_Availability.sql
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DoctorService", "DoctorService", "{FCC37E3E-7597-48CE-BCBC-7FE42DCBC051}"
