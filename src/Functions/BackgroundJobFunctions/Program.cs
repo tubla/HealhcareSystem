@@ -11,16 +11,19 @@ var secretProvider = await builder.Services.AddSharedSecretsAsync(builder.Config
 
 var eventHubConn = secretProvider.GetSecret("EventHubConnection");
 var sqlConn = secretProvider.GetSecret("SqlConnection");
+var communicationServiceEndpoint = secretProvider.GetSecret("CommunicationServiceEndpoint");
 
-builder.Configuration.AddInMemoryCollection(new Dictionary<string, string>
-{
-    { "EventHubConnection", eventHubConn! },
-    { "SqlConnection", sqlConn!},
-    { "AzureBlobStorage:ContainerName", "media" }
-}!);
+builder.Configuration.AddInMemoryCollection(
+    new Dictionary<string, string>
+    {
+        { "EventHubConnection", eventHubConn! },
+        { "SqlConnection", sqlConn! },
+        { "CommunicationServiceEndpoint", communicationServiceEndpoint! },
+        { "AzureBlobStorage:ContainerName", "media" },
+    }!
+);
 
 builder.Services.AddSharedServices();
 builder.Services.AddScoped<IEmailClient, AzureCommunicationEmailClient>();
 
 builder.Build().Run();
-

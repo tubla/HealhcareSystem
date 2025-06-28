@@ -2,7 +2,7 @@
 using Azure.Communication.Email;
 using Azure.Identity;
 using BackgroundJobFunctions.V1.Contracts;
-using shared.V1.HelperClasses.Contracts;
+using Microsoft.Extensions.Configuration;
 
 namespace BackgroundJobFunctions.V1.Appointment;
 
@@ -12,13 +12,13 @@ public class AzureCommunicationEmailClient : IEmailClient
     private const string _fromEmail =
         "donotreply@b4e1c6cf-d68c-461e-a3fe-10f79f2c41fb.azurecomm.net";
 
-    public AzureCommunicationEmailClient(ISecretProvider secretProvider)
+    public AzureCommunicationEmailClient(IConfiguration _configuration)
     {
         var endPoint =
-            secretProvider.GetSecret("CommunicationServiceEndpoint")
+            _configuration["CommunicationServiceEndpoint"]
             ?? throw new ArgumentNullException(
-                nameof(secretProvider),
-                "CommunicationServiceEndpoint secret is not available."
+                nameof(_configuration),
+                "CommunicationServiceEndpoint url is not available."
             );
         _emailClient = new EmailClient(new Uri(endPoint), new DefaultAzureCredential());
     }
