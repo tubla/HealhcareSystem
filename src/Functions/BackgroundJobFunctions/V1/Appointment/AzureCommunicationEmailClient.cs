@@ -1,27 +1,26 @@
 ﻿using Azure;
 using Azure.Communication.Email;
+using Azure.Identity;
 using BackgroundJobFunctions.V1.Contracts;
-using Microsoft.Extensions.Configuration;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+using shared.V1.HelperClasses.Contracts;
 
 namespace BackgroundJobFunctions.V1.Appointment;
 
 public class AzureCommunicationEmailClient : IEmailClient
 {
     private readonly EmailClient _emailClient;
-    private readonly string _fromEmail;
+    private const string _fromEmail =
+        "donotreply@b4e1c6cf-d68c-461e-a3fe-10f79f2c41fb.azurecomm.net";
 
-    public AzureCommunicationEmailClient(IConfiguration configuration)
+    public AzureCommunicationEmailClient(ISecretProvider secretProvider)
     {
-        var connectionString = configuration["AzureCommunication:ConnectionString"]
-            ?? throw new ArgumentNullException(nameof(configuration), "AzureCommunication:ConnectionString is not configured.");
-
-        _fromEmail = configuration["AzureCommunication:FromEmail"]
-            ?? throw new ArgumentNullException(nameof(configuration), "AzureCommunication:FromEmail is not configured.");
-
-        _emailClient = new EmailClient(connectionString);
+        var endPoint =
+            secretProvider.GetSecret("CommunicationServiceEndpoint")
+            ?? throw new ArgumentNullException(
+                nameof(secretProvider),
+                "CommunicationServiceEndpoint secret is not available."
+            );
+        _emailClient = new EmailClient(new Uri(endPoint), new DefaultAzureCredential());
     }
 
     public async Task SendEmailAsync(string toEmail, string subject, string body)
@@ -31,15 +30,8 @@ public class AzureCommunicationEmailClient : IEmailClient
 
         var message = new EmailMessage(
             senderAddress: _fromEmail,
-            content: new EmailContent(subject)
-            {
-                PlainText = body,
-                Html = $"<p>{body}</p>"
-            },
-            recipients: new EmailRecipients(new List<EmailAddress>
-            {
-                new(toEmail)
-            })
+            content: new EmailContent(subject) { PlainText = body, Html = $"<p>{body}</p>" },
+            recipients: new EmailRecipients(new List<EmailAddress> { new(toEmail) })
         );
 
         // Send the email and wait for completion
@@ -50,7 +42,9 @@ public class AzureCommunicationEmailClient : IEmailClient
 
         if (operation.HasCompleted && operation.Value.Status != EmailSendStatus.Succeeded)
         {
-            throw new InvalidOperationException($"Email send failed. Status: {operation.Value.Status}");
+            throw new InvalidOperationException(
+                $"Email send failed. Status: {operation.Value.Status}"
+            );
         }
     }
 }

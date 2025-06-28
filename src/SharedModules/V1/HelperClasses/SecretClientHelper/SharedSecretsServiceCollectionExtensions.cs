@@ -9,22 +9,30 @@ namespace shared.V1.HelperClasses.SecretClientHelper;
 
 public static class SharedSecretsServiceCollectionExtensions
 {
-    public static async Task<ISecretProvider> AddSharedSecretsAsync(this IServiceCollection services, IConfiguration configuration)
+    public static async Task<ISecretProvider> AddSharedSecretsAsync(
+        this IServiceCollection services,
+        IConfiguration configuration
+    )
     {
         var cache = new MemoryCache(new MemoryCacheOptions());
 
-        var keyVaultUri = configuration["KeyVault:VaultUri"]
+        var keyVaultUri =
+            configuration["KeyVault:VaultUri"]
             ?? Environment.GetEnvironmentVariable("KeyVault:VaultUri")
             ?? "https://healthcare-vault.vault.azure.net/";
         var secretClient = new SecretClient(new Uri(keyVaultUri), new DefaultAzureCredential());
 
-        string[] secretKeys = ["SignalRConnection",
-                               "EventHubConnection",
-                               "BlobStorageConnection",
-                               "AppConfigConnection",
-                               "AppInsightsConnection",
-                               "SqlConnection",
-                               "JwtKey"];
+        string[] secretKeys =
+        [
+            "SignalRConnection",
+            "EventHubConnection",
+            "BlobStorageConnection",
+            "AppConfigConnection",
+            "AppInsightsConnection",
+            "SqlConnection",
+            "JwtKey",
+            "CommunicationServiceEndpoint",
+        ];
 
         foreach (var key in secretKeys)
         {
